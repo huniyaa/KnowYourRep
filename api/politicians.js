@@ -1,6 +1,6 @@
 export default async function handler(req, res) {
   try {
-    const { name = "", offset = 0, limit = 20 } = req.query;
+    const { name = "", province = "", offset = 0, limit = 20 } = req.query;
  
     const params = new URLSearchParams({ format: "json", limit, offset });
     if (name.trim()) params.set("name", name.trim());
@@ -11,13 +11,20 @@ export default async function handler(req, res) {
     if (!response.ok) throw new Error(`Upstream error: ${response.status}`);
     const data = await response.json();
  
-    const cleaned = data.objects.map((rep) => ({
+    let cleaned = data.objects.map((rep) => ({
       name:     rep.name ?? "Unknown",
       party:    rep.current_party?.short_name?.en ?? "Unknown",
       district: rep.riding?.name?.en ?? "Unknown",
       province: rep.riding?.province ?? "",
       image:    rep.image ?? "",
     }));
+ 
+    // Filter by province server-side if provided
+    if (province.trim()) {
+      cleaned = cleaned.filter(
+        (rep) => rep.province.toLowerCase() === province.trim().toLowerCase()
+      );
+    }
  
     res.status(200).json({
       politicians: cleaned,

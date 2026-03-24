@@ -8,44 +8,102 @@ body {
   padding: 40px 20px;
 }
  
-header {
-  text-align: center;
-  margin-bottom: 32px;
-}
- 
-header h1 {
-  font-size: 2rem;
-  font-weight: 700;
-  color: #c0392b;
-}
- 
-header p {
-  margin-top: 6px;
-  color: #555;
-  font-size: 0.95rem;
-}
- 
+header { text-align: center; margin-bottom: 32px; }
+header h1 { font-size: 2rem; font-weight: 700; color: #c0392b; }
+header p { margin-top: 6px; color: #555; font-size: 0.95rem; }
 header a { color: #c0392b; }
  
+/* ── Controls ── */
 #controls {
   display: flex;
   justify-content: center;
-  margin-bottom: 20px;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+}
+ 
+/* ── Search wrapper (positions the dropdown) ── */
+#search-wrapper {
+  position: relative;
+  width: 100%;
+  max-width: 380px;
 }
  
 #search {
+  width: 100%;
   padding: 10px 16px;
   border: 1px solid #ccc;
   border-radius: 8px;
   font-size: 0.95rem;
-  width: 100%;
-  max-width: 400px;
   outline: none;
   transition: border-color 0.2s;
 }
- 
 #search:focus { border-color: #c0392b; }
  
+/* ── Autocomplete dropdown ── */
+#dropdown {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+  list-style: none;
+  z-index: 100;
+  overflow: hidden;
+  max-height: 320px;
+  overflow-y: auto;
+}
+ 
+#dropdown li {
+  padding: 10px 14px;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  border-bottom: 1px solid #f0f0f0;
+  transition: background 0.1s;
+}
+#dropdown li:last-child { border-bottom: none; }
+#dropdown li:hover,
+#dropdown li.active { background: #fff5f5; }
+ 
+.suggestion-name {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #1a202c;
+}
+.suggestion-district {
+  font-size: 0.78rem;
+  color: #777;
+}
+ 
+/* highlight matched text */
+#dropdown mark {
+  background: none;
+  color: #c0392b;
+  font-weight: 700;
+}
+ 
+/* ── Province filter ── */
+#province-filter {
+  padding: 10px 14px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  background: white;
+  color: #1a202c;
+  outline: none;
+  cursor: pointer;
+  transition: border-color 0.2s;
+  height: 42px;
+}
+#province-filter:focus { border-color: #c0392b; }
+ 
+/* ── Status ── */
 #status {
   text-align: center;
   color: #555;
@@ -54,6 +112,7 @@ header a { color: #c0392b; }
   min-height: 20px;
 }
  
+/* ── Results grid ── */
 #results {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
@@ -72,51 +131,23 @@ header a { color: #c0392b; }
   gap: 14px;
   transition: transform 0.15s, box-shadow 0.15s;
 }
- 
-.card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 16px rgba(0,0,0,0.1);
-}
+.card:hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(0,0,0,0.1); }
  
 .avatar {
-  width: 46px;
-  height: 46px;
+  width: 46px; height: 46px;
   border-radius: 50%;
   background: #c0392b;
   color: white;
   font-weight: 700;
   font-size: 1.1rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  display: flex; align-items: center; justify-content: center;
   flex-shrink: 0;
 }
  
 .info { overflow: hidden; }
- 
-.info h3 {
-  font-size: 0.95rem;
-  font-weight: 600;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
- 
-.party {
-  font-size: 0.8rem;
-  color: #c0392b;
-  margin-top: 2px;
-  font-weight: 500;
-}
- 
-.district {
-  font-size: 0.8rem;
-  color: #777;
-  margin-top: 1px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
+.info h3 { font-size: 0.95rem; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.party { font-size: 0.8rem; color: #c0392b; margin-top: 2px; font-weight: 500; }
+.district { font-size: 0.8rem; color: #777; margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
  
 .error, .empty {
   text-align: center;
@@ -126,6 +157,7 @@ header a { color: #c0392b; }
   margin-top: 20px;
 }
  
+/* ── Pagination ── */
 #pagination {
   display: flex;
   justify-content: center;
@@ -134,9 +166,7 @@ header a { color: #c0392b; }
   margin-top: 32px;
   padding-bottom: 40px;
 }
- 
 #page-info { font-size: 0.9rem; color: #555; }
- 
 .page-btn {
   padding: 10px 20px;
   border: none;
@@ -149,3 +179,4 @@ header a { color: #c0392b; }
 }
 .page-btn:hover { background: #a93226; }
 .page-btn:disabled { background: #ccc; cursor: default; }
+ 
