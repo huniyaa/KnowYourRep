@@ -52,6 +52,3 @@ export default async function handler(req, res) {
     res.status(500).json({ error: "Failed to fetch data" });
   }
 }
-
-console.log("Selected province:", province);
-console.log("Sample rep province:", cleaned[0]?.province);
