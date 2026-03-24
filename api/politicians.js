@@ -36,10 +36,11 @@ export default async function handler(req, res) {
     }));
  
     // Filter by province server-side if provided
-    if (province.trim()) {
-  cleaned = cleaned.filter(
-    (rep) => rep.province === province
-  );
+   if (province.trim()) {
+  cleaned = cleaned.filter((rep) => {
+    const code = provinceMap[rep.province];
+    return code === province;
+  });
 }
  
     res.status(200).json({
