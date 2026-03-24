@@ -1,3 +1,12 @@
+let map = L.map('map').setView([56.1304, -106.3468], 4); // Canada center
+
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+  maxZoom: 18,
+}).addTo(map);
+
+let markersLayer = L.layerGroup().addTo(map);
+
+
 const searchInput    = document.getElementById("search");
 const dropdown       = document.getElementById("dropdown");
 const provinceFilter = document.getElementById("province-filter");
@@ -230,4 +239,7 @@ function renderPagination() {
   document.getElementById("next-btn").addEventListener("click", () =>
     fetchPoliticians(currentQuery, currentProvince, currentOffset + LIMIT));
 }
- 
+ if (!coords) {
+  console.log("Missing coords for:", rep.district);
+  return;
+}
