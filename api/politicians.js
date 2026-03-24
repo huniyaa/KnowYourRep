@@ -1,45 +1,37 @@
-const cleaned = data.objects.map((rep) => ({
-  name: rep.name ?? "Unknown",
-  party: rep.current_party?.short_name?.en ?? "Unknown",
-  district: rep.current_riding?.name?.en ?? "Unknown",
-  province: rep.current_riding?.province ?? "",
-  image: rep.image ?? "",
-}));
-
 export default async function handler(req, res) {
   try {
-    const { name = "", province = "", offset = 0, limit = 20 } = req.query;
- 
+    const { name = "", province = "" } = req.query;
+
     const params = new URLSearchParams({ format: "json", limit: 400 });
     if (name.trim()) params.set("name", name.trim());
- 
+
     const response = await fetch(
       `https://api.openparliament.ca/politicians/?${params}`
     );
     if (!response.ok) throw new Error(`Upstream error: ${response.status}`);
     const data = await response.json();
- 
+
     let cleaned = data.objects.map((rep) => ({
-      name:     rep.name ?? "Unknown",
-      party:    rep.current_party?.short_name?.en ?? "Unknown",
-      district: rep.riding?.name?.en ?? "Unknown",
-      province: provinceMap[rep.riding?.province] || "",
-      image:    rep.image ?? "",
+      name: rep.name ?? "Unknown",
+      party: rep.current_party?.short_name?.en ?? "Unknown",
+      district: rep.current_riding?.name?.en ?? "Unknown",
+      province: rep.current_riding?.province ?? "",
+      image: rep.image ?? "",
     }));
- 
-    // Filter by province server-side if provided
-   if (province.trim()) {
-  cleaned = cleaned.filter(
-    (rep) => rep.province === province
-  );
-}
- 
+
+    if (province.trim()) {
+      cleaned = cleaned.filter(
+        (rep) => rep.province === province
+      );
+    }
+
     res.status(200).json({
       politicians: cleaned,
-      count:  data.pagination?.count ?? cleaned.length,
-      offset: Number(offset),
-      limit:  Number(limit),
+      count: cleaned.length,
+      offset: 0,
+      limit: cleaned.length,
     });
+
   } catch (error) {
     res.status(500).json({ error: "Failed to fetch data" });
   }
