@@ -18,7 +18,7 @@ export default async function handler(req, res) {
   try {
     const { name = "", province = "", offset = 0, limit = 20 } = req.query;
  
-    const params = new URLSearchParams({ format: "json", limit, offset });
+    const params = new URLSearchParams({ format: "json", limit: 400 });
     if (name.trim()) params.set("name", name.trim());
  
     const response = await fetch(
