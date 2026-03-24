@@ -55,19 +55,28 @@ async function fetchPoliticians(query = "", province = "", offset = 0) {
  
 // ─── Autocomplete ─────────────────────────────────────────────────────────────
  
-async function fetchSuggestions(query) {
-  if (!query || query.length < 2) { closeDropdown(); return; }
- 
-  try {
-    const res  = await fetch(`/api/politicians?name=${encodeURIComponent(query)}&limit=8`);
-    if (!res.ok) return;
-    const data = await res.json();
-    showDropdown(data.politicians, query);
-  } catch {
-    closeDropdown();
-  }
+function fetchSuggestions(query) {
+  if (!query) { closeDropdown(); return; }
+
+  const filtered = allReps
+    .filter(p =>
+      p.name.toLowerCase().startsWith(query.toLowerCase())
+    )
+    .slice(0, 8);
+
+  showDropdown(filtered, query);
 }
- 
+
+loadAllData();
+
+let allReps = [];
+
+async function loadAllData() {
+  const res = await fetch("/api/politicians?limit=334");
+  const data = await res.json();
+  allReps = data.politicians;
+}
+
 function showDropdown(politicians, query) {
   if (!politicians.length) { closeDropdown(); return; }
  

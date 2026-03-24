@@ -1,3 +1,19 @@
+const provinceMap = {
+  "Ontario": "ON",
+  "Quebec": "QC",
+  "British Columbia": "BC",
+  "Alberta": "AB",
+  "Manitoba": "MB",
+  "Saskatchewan": "SK",
+  "Nova Scotia": "NS",
+  "New Brunswick": "NB",
+  "Newfoundland and Labrador": "NL",
+  "Prince Edward Island": "PE",
+  "Yukon": "YT",
+  "Northwest Territories": "NT",
+  "Nunavut": "NU"
+};
+
 export default async function handler(req, res) {
   try {
     const { name = "", province = "", offset = 0, limit = 20 } = req.query;
@@ -15,7 +31,7 @@ export default async function handler(req, res) {
       name:     rep.name ?? "Unknown",
       party:    rep.current_party?.short_name?.en ?? "Unknown",
       district: rep.riding?.name?.en ?? "Unknown",
-      province: rep.riding?.province ?? "",
+      province: provinceMap[rep.riding?.province] || "",
       image:    rep.image ?? "",
     }));
  
