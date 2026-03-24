@@ -37,10 +37,10 @@ export default async function handler(req, res) {
  
     // Filter by province server-side if provided
     if (province.trim()) {
-      cleaned = cleaned.filter(
-        (rep) => rep.province.toLowerCase() === province.trim().toLowerCase()
-      );
-    }
+  cleaned = cleaned.filter(
+    (rep) => rep.province === province
+  );
+}
  
     res.status(200).json({
       politicians: cleaned,
