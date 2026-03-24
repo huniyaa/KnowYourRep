@@ -1,18 +1,10 @@
-const provinceMap = {
-  "Ontario": "ON",
-  "Quebec": "QC",
-  "British Columbia": "BC",
-  "Alberta": "AB",
-  "Manitoba": "MB",
-  "Saskatchewan": "SK",
-  "Nova Scotia": "NS",
-  "New Brunswick": "NB",
-  "Newfoundland and Labrador": "NL",
-  "Prince Edward Island": "PE",
-  "Yukon": "YT",
-  "Northwest Territories": "NT",
-  "Nunavut": "NU"
-};
+const cleaned = data.objects.map((rep) => ({
+  name: rep.name ?? "Unknown",
+  party: rep.current_party?.short_name?.en ?? "Unknown",
+  district: rep.current_riding?.name?.en ?? "Unknown",
+  province: rep.current_riding?.province ?? "",
+  image: rep.image ?? "",
+}));
 
 export default async function handler(req, res) {
   try {
@@ -37,10 +29,9 @@ export default async function handler(req, res) {
  
     // Filter by province server-side if provided
    if (province.trim()) {
-  cleaned = cleaned.filter((rep) => {
-    const code = provinceMap[rep.province];
-    return code === province;
-  });
+  cleaned = cleaned.filter(
+    (rep) => rep.province === province
+  );
 }
  
     res.status(200).json({
