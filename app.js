@@ -179,9 +179,15 @@ searchInput.addEventListener("blur", () => {
  
 provinceFilter.addEventListener("change", () => {
   currentProvince = provinceFilter.value;
-  currentOffset   = 0;
+
+  // 🔥 IMPORTANT: reset search
+  currentQuery = "";
+  searchInput.value = "";
+
+  currentOffset = 0;
   closeDropdown();
-  fetchPoliticians(currentQuery, currentProvince, 0);
+
+  fetchPoliticians("", currentProvince, 0);
 });
  
 // ─── Render cards ─────────────────────────────────────────────────────────────

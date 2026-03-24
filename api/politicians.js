@@ -1,7 +1,9 @@
 export default async function handler(req, res) {
   try {
+    // get query parameters
     const { name = "", province = "" } = req.query;
 
+    // fetch all MPs (large enough limit for provincial filtering)
     const params = new URLSearchParams({ format: "json", limit: 400 });
     if (name.trim()) params.set("name", name.trim());
 
@@ -11,6 +13,7 @@ export default async function handler(req, res) {
     if (!response.ok) throw new Error(`Upstream error: ${response.status}`);
     const data = await response.json();
 
+    // map API objects to cleaned format
     let cleaned = data.objects.map((rep) => ({
       name: rep.name ?? "Unknown",
       party: rep.current_party?.short_name?.en ?? "Unknown",
@@ -19,12 +22,12 @@ export default async function handler(req, res) {
       image: rep.image ?? "",
     }));
 
+    // filter by province if selected
     if (province.trim()) {
-      cleaned = cleaned.filter(
-        (rep) => rep.province === province
-      );
+      cleaned = cleaned.filter(rep => rep.province === province);
     }
 
+    // send response
     res.status(200).json({
       politicians: cleaned,
       count: cleaned.length,
@@ -33,6 +36,7 @@ export default async function handler(req, res) {
     });
 
   } catch (error) {
+    console.error(error);
     res.status(500).json({ error: "Failed to fetch data" });
   }
 }
