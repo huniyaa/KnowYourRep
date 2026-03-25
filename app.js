@@ -55,11 +55,31 @@ async function fetchPoliticians(query = "", province = "", offset = 0) {
       : `Showing ${from}–${to} of ${totalCount} politicians`;
  
     displayResults(data.politicians);
-    renderPagination();
+updateMapMarkers(data.politicians); // ✅ ADD THIS
+renderPagination();
   } catch (err) {
     statusDiv.textContent = "";
     resultsDiv.innerHTML  = `<p class="error">⚠️ ${err.message}</p>`;
   }
+}
+
+function updateMapMarkers(reps) {
+  if (!markersLayer) return;
+
+  markersLayer.clearLayers();
+
+  reps.forEach(rep => {
+    const coords = ridingCoords[rep.district];
+    if (!coords) return;
+
+    const marker = L.marker([coords.lat, coords.lng])
+      .bindPopup(`
+        <strong>${rep.name}</strong><br/>
+        ${rep.district}, ${rep.province}
+      `);
+
+    markersLayer.addLayer(marker);
+  });
 }
  
 // ─── Autocomplete ─────────────────────────────────────────────────────────────
@@ -238,8 +258,4 @@ function renderPagination() {
     fetchPoliticians(currentQuery, currentProvince, currentOffset - LIMIT));
   document.getElementById("next-btn").addEventListener("click", () =>
     fetchPoliticians(currentQuery, currentProvince, currentOffset + LIMIT));
-}
- if (!coords) {
-  console.log("Missing coords for:", rep.district);
-  return;
 }

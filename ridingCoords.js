@@ -3,3 +3,4 @@ const ridingCoords = {
   "Toronto Centre": { lat: 43.65, lng: -79.38 },
   "Vancouver East": { lat: 49.28, lng: -123.06 },
 };
+

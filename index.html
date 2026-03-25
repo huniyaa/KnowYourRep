@@ -4,7 +4,11 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Canadian Politicians</title>
+
   <link rel="stylesheet" href="style.css" />
+
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
 </head>
 <body>
  
@@ -38,20 +42,19 @@
   </div>
  
   <div id="status"></div>
+
+  <!-- ✅ MAP GOES HERE -->
+  <div id="map"></div>
+
   <div id="results"></div>
   <div id="pagination"></div>
- <link
-  rel="stylesheet"
-  href="https://unpkg.com/leaflet/dist/leaflet.css"
-/>
-<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
-<div id="map"></div>
-<div id="status"></div>
-<div id="map"></div>
-<div id="results"></div>
-<script src="ridingCoords.js"></script>
-<script src="app.js"></script>
+
+  <!-- Leaflet JS -->
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
+  <!-- Your files -->
+  <script src="ridingCoords.js"></script>
   <script src="app.js"></script>
+
 </body>
 </html>
- 
