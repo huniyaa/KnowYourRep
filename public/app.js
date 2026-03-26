@@ -27,7 +27,6 @@ function toSlug(name) {
     .trim();
 }
 
-
 async function fetchRidingBoundary(districtName) {
   const slug = toSlug(districtName);
   const url  = `https://represent.opennorth.ca/boundaries/federal-electoral-districts/${slug}/simple_shape`;
