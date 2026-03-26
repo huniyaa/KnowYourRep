@@ -1,3 +1,6 @@
+
+Copy
+
 * { box-sizing: border-box; margin: 0; padding: 0; }
  
 body {
@@ -23,7 +26,6 @@ header a { color: #c0392b; }
   flex-wrap: wrap;
 }
  
-/* ── Search wrapper (positions the dropdown) ── */
 #search-wrapper {
   position: relative;
   width: 100%;
@@ -45,14 +47,13 @@ header a { color: #c0392b; }
 #dropdown {
   position: absolute;
   top: calc(100% + 4px);
-  left: 0;
-  right: 0;
+  left: 0; right: 0;
   background: white;
   border: 1px solid #ddd;
   border-radius: 8px;
   box-shadow: 0 8px 24px rgba(0,0,0,0.12);
   list-style: none;
-  z-index: 100;
+  z-index: 1000;
   overflow: hidden;
   max-height: 320px;
   overflow-y: auto;
@@ -71,22 +72,9 @@ header a { color: #c0392b; }
 #dropdown li:hover,
 #dropdown li.active { background: #fff5f5; }
  
-.suggestion-name {
-  font-size: 0.9rem;
-  font-weight: 600;
-  color: #1a202c;
-}
-.suggestion-district {
-  font-size: 0.78rem;
-  color: #777;
-}
- 
-/* highlight matched text */
-#dropdown mark {
-  background: none;
-  color: #c0392b;
-  font-weight: 700;
-}
+.suggestion-name { font-size: 0.9rem; font-weight: 600; color: #1a202c; }
+.suggestion-district { font-size: 0.78rem; color: #777; }
+#dropdown mark { background: none; color: #c0392b; font-weight: 700; }
  
 /* ── Province filter ── */
 #province-filter {
@@ -112,6 +100,37 @@ header a { color: #c0392b; }
   min-height: 20px;
 }
  
+/* ── Map ── */
+#map {
+  height: 480px;
+  max-width: 1100px;
+  margin: 0 auto 28px;
+  border-radius: 12px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+  z-index: 0;
+}
+ 
+/* Leaflet popup customisation */
+.map-popup {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 160px;
+}
+.map-popup strong {
+  font-size: 0.95rem;
+  color: #1a202c;
+}
+.popup-party {
+  font-size: 0.8rem;
+  color: #c0392b;
+  font-weight: 600;
+}
+.popup-district {
+  font-size: 0.78rem;
+  color: #777;
+}
+ 
 /* ── Results grid ── */
 #results {
   display: grid;
@@ -130,6 +149,7 @@ header a { color: #c0392b; }
   align-items: center;
   gap: 14px;
   transition: transform 0.15s, box-shadow 0.15s;
+  cursor: pointer; /* clickable — zooms map to riding */
 }
 .card:hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(0,0,0,0.1); }
  
@@ -179,10 +199,3 @@ header a { color: #c0392b; }
 }
 .page-btn:hover { background: #a93226; }
 .page-btn:disabled { background: #ccc; cursor: default; }
- 
-#map {
-  height: 400px;
-  max-width: 1100px;
-  margin: 0 auto 24px;
-  border-radius: 12px;
-}
