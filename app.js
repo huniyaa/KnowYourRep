@@ -30,7 +30,7 @@ function normalizeName(name) {
     .trim();
 }
  
-fetch("/ridings.geojson.json")
+fetch("/ridings.geojson")
   .then(r => {
     if (!r.ok) throw new Error(`HTTP ${r.status} — make sure ridings.geojson is in your public/ folder`);
     return r.json();
