@@ -1,7 +1,7 @@
 // ─── Map setup ────────────────────────────────────────────────────────────────
+const map = L.map("map").setView([56.1304, -106.3468], 4);
 let markersLayer = L.layerGroup().addTo(map);
 
-const map = L.map("map").setView([56.1304, -106.3468], 4);
  
 L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
   maxZoom: 18,
