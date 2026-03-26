@@ -6,136 +6,90 @@ L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
   attribution: "© OpenStreetMap contributors"
 }).addTo(map);
  
-// ─── Styles ───────────────────────────────────────────────────────────────────
-const STYLE_DEFAULT     = { color: "#aaa",     weight: 0.8, fillColor: "#ccc",     fillOpacity: 0.15 };
-const STYLE_HIGHLIGHTED = { color: "#c0392b",  weight: 2,   fillColor: "#c0392b",  fillOpacity: 0.35 };
-const STYLE_HOVER       = { color: "#922b21",  weight: 2.5, fillColor: "#c0392b",  fillOpacity: 0.55 };
+const STYLE_DEFAULT     = { color: "#c0392b", weight: 2, fillColor: "#c0392b", fillOpacity: 0.25 };
+const STYLE_HOVER       = { color: "#922b21", weight: 3, fillColor: "#c0392b", fillOpacity: 0.5  };
  
-// ─── GeoJSON state ────────────────────────────────────────────────────────────
-let geojsonLayer   = null;
-let ridingLayerMap = new Map(); // normalizedName → { layer, rawName }
-let geojsonReady   = false;
+// Holds all currently drawn boundary layers so we can clear them on next search
+let activeLayers = [];
  
-// Normalize riding names for fuzzy matching:
-// lowercases, strips accents, normalises all dash variants to a plain hyphen,
-// collapses whitespace — so "Beaches—East York" matches "Beaches-East York" etc.
-function normalizeName(name) {
+// ─── Boundary fetching from Represent OpenNorth API ───────────────────────────
+// Converts a riding name like "Beaches—East York" to slug "beaches-east-york"
+function toSlug(name) {
   return (name || "")
     .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")   // strip accents
+    .replace(/[\u0300-\u036f]/g, "")          // strip accents: é→e
     .toLowerCase()
-    .replace(/[\u2014\u2013\u2012\u2010-]/g, "-") // em/en/fig dash → hyphen
-    .replace(/\s*-\s*/g, "-")          // tighten spaces around hyphens
-    .replace(/\s+/g, " ")
+    .replace(/[\u2014\u2013\u2012\u2010]/g, "-") // em/en dash → hyphen
+    .replace(/[''']/g, "")                     // strip apostrophes
+    .replace(/[^a-z0-9\s-]/g, "")             // remove other special chars
+    .replace(/\s+/g, "-")                      // spaces → hyphens
+    .replace(/-+/g, "-")                       // collapse double hyphens
     .trim();
 }
  
-fetch("/ridings.geojson")
-  .then(r => {
-    if (!r.ok) throw new Error(`HTTP ${r.status} — make sure ridings.geojson is in your public/ folder`);
-    return r.json();
-  })
-  .then(data => {
-    if (data.features?.length) {
-      console.log(`✅ ridings.geojson loaded: ${data.features.length} features`);
-      console.log("📋 Property keys:", Object.keys(data.features[0].properties));
-    }
+async function fetchRidingBoundary(districtName) {
+  const slug = toSlug(districtName);
+  const url  = `https://represent.opennorth.ca/boundaries/federal-electoral-districts/${slug}/simple_shape`;
+  try {
+    const res = await fetch(url);
+    if (!res.ok) return null;
+    return await res.json();
+  } catch {
+    return null;
+  }
+}
  
-    geojsonLayer = L.geoJSON(data, {
-      style: () => STYLE_DEFAULT,
-      onEachFeature(feature, layer) {
-        // Try every known Elections Canada English name field
-        const rawName =
-          feature.properties.FEDENAME ||  // 2023 SHP (English)
-          feature.properties.ENNAME   ||  // alternate
-          feature.properties.FEDNAME  ||  // older bilingual
-          feature.properties.name     ||
-          feature.properties.NAME     ||
-          "";
+function clearBoundaries() {
+  activeLayers.forEach(l => map.removeLayer(l));
+  activeLayers = [];
+}
  
-        const key = normalizeName(rawName);
-        if (key) ridingLayerMap.set(key, { layer, rawName });
+async function showBoundaries(politicians) {
+  clearBoundaries();
  
-        layer.on({
-          mouseover(e) {
-            const l = e.target;
-            // only apply hover style if already highlighted
-            if (l.options.fillOpacity > 0.2) l.setStyle(STYLE_HOVER);
-            l.bringToFront();
-          },
-          mouseout(e) {
-            // restore whichever style it had (geojsonLayer.resetStyle restores default,
-            // so we track highlighted state separately)
-            const l = e.target;
-            if (l._highlighted) {
-              l.setStyle(STYLE_HIGHLIGHTED);
-            } else {
-              geojsonLayer.resetStyle(l);
-            }
-          }
+  // Fetch all boundaries in parallel
+  const results = await Promise.all(
+    politicians.map(rep =>
+      fetchRidingBoundary(rep.district).then(geojson => ({ rep, geojson }))
+    )
+  );
+ 
+  const bounds = [];
+ 
+  results.forEach(({ rep, geojson }) => {
+    if (!geojson) return;
+ 
+    const layer = L.geoJSON(geojson, {
+      style: STYLE_DEFAULT,
+      onEachFeature(_, l) {
+        l.bindPopup(`
+          <div class="map-popup">
+            <strong>${escapeHtml(rep.name)}</strong>
+            <span class="popup-party">${escapeHtml(rep.party)}</span>
+            <span class="popup-district">${escapeHtml(rep.district)}${rep.province ? `, ${rep.province}` : ""}</span>
+          </div>
+        `);
+        l.on({
+          mouseover(e) { e.target.setStyle(STYLE_HOVER); e.target.bringToFront(); },
+          mouseout(e)  { e.target.setStyle(STYLE_DEFAULT); }
         });
       }
     }).addTo(map);
  
-    geojsonReady = true;
- 
-    // If politicians already loaded before GeoJSON, highlight them now
-    if (pendingHighlight.length) {
-      highlightRidings(pendingHighlight);
-      pendingHighlight = [];
-    }
-  })
-    .catch(err => {
-    console.error("❌ ridings.geojson error:", err.message);
-  });
- 
-// ─── Highlight helpers ────────────────────────────────────────────────────────
-let pendingHighlight = [];
- 
-function highlightRidings(politicians) {
-  if (!geojsonReady) {
-    pendingHighlight = politicians;
-    return;
-  }
- 
-  // Reset all layers
-  ridingLayerMap.forEach(({ layer }) => {
-    layer._highlighted = false;
-    geojsonLayer.resetStyle(layer);
-  });
- 
-  const bounds = [];
- 
-  politicians.forEach(rep => {
-    const key   = normalizeName(rep.district);
-    const entry = ridingLayerMap.get(key);
-    if (!entry) return;
- 
-    const { layer, rawName } = entry;
-    layer._highlighted = true;
-    layer.setStyle(STYLE_HIGHLIGHTED);
- 
-    layer.unbindPopup();
-    layer.bindPopup(`
-      <div class="map-popup">
-        <strong>${escapeHtml(rep.name)}</strong>
-        <span class="popup-party">${escapeHtml(rep.party)}</span>
-        <span class="popup-district">${escapeHtml(rawName)}${rep.province ? `, ${rep.province}` : ""}</span>
-      </div>
-    `);
+    activeLayers.push(layer);
  
     try {
-      const layerBounds = layer.getBounds();
-      if (layerBounds.isValid()) bounds.push(layerBounds);
+      const b = layer.getBounds();
+      if (b.isValid()) bounds.push(b);
     } catch {}
   });
  
-  // Zoom to fit all highlighted ridings
+  // Zoom map to fit all highlighted ridings
   if (bounds.length === 1) {
     map.fitBounds(bounds[0], { padding: [40, 40], maxZoom: 10 });
   } else if (bounds.length > 1) {
     const combined = bounds.reduce((acc, b) => acc.extend(b), bounds[0]);
-    map.fitBounds(combined, { padding: [40, 40], maxZoom: 8 });
+    map.fitBounds(combined, { padding: [40, 40], maxZoom: 7 });
   }
 }
  
@@ -155,7 +109,7 @@ let totalCount      = 0;
 let debounceTimer   = null;
 let activeIndex     = -1;
  
-// Cache all reps once for autocomplete
+// Cache for autocomplete
 let allReps = [];
 (async () => {
   try {
@@ -186,6 +140,7 @@ async function fetchPoliticians(query = "", province = "", offset = 0) {
     if (!data.politicians.length) {
       statusDiv.textContent = "";
       resultsDiv.innerHTML  = `<p class="empty">No politicians found.</p>`;
+      clearBoundaries();
       return;
     }
  
@@ -196,7 +151,7 @@ async function fetchPoliticians(query = "", province = "", offset = 0) {
       : `Showing ${from}–${to} of ${totalCount} politicians`;
  
     displayResults(data.politicians);
-    highlightRidings(data.politicians);
+    showBoundaries(data.politicians); // fetch + draw boundaries async
     renderPagination();
   } catch (err) {
     statusDiv.textContent = "";
@@ -207,21 +162,15 @@ async function fetchPoliticians(query = "", province = "", offset = 0) {
 // ─── Autocomplete ─────────────────────────────────────────────────────────────
 function fetchSuggestions(query) {
   if (!query || query.length < 2) { closeDropdown(); return; }
- 
   const q        = query.toLowerCase();
   const filtered = allReps
-    .filter(p =>
-      p.name.toLowerCase().includes(q) ||
-      p.district.toLowerCase().includes(q)
-    )
+    .filter(p => p.name.toLowerCase().includes(q) || p.district.toLowerCase().includes(q))
     .slice(0, 8);
- 
   showDropdown(filtered, query);
 }
  
 function showDropdown(politicians, query) {
   if (!politicians.length) { closeDropdown(); return; }
- 
   activeIndex = -1;
   dropdown.innerHTML = politicians.map((p, i) => `
     <li data-index="${i}" data-name="${escapeHtml(p.name)}">
@@ -229,22 +178,13 @@ function showDropdown(politicians, query) {
       <span class="suggestion-district">${escapeHtml(p.district)}${p.province ? `, ${p.province}` : ""}</span>
     </li>
   `).join("");
- 
   dropdown.hidden = false;
- 
   dropdown.querySelectorAll("li").forEach(li => {
-    li.addEventListener("mousedown", e => {
-      e.preventDefault();
-      selectSuggestion(li.dataset.name);
-    });
+    li.addEventListener("mousedown", e => { e.preventDefault(); selectSuggestion(li.dataset.name); });
   });
 }
  
-function closeDropdown() {
-  dropdown.hidden = true;
-  dropdown.innerHTML = "";
-  activeIndex = -1;
-}
+function closeDropdown() { dropdown.hidden = true; dropdown.innerHTML = ""; activeIndex = -1; }
  
 function selectSuggestion(name) {
   searchInput.value = name;
@@ -255,41 +195,27 @@ function selectSuggestion(name) {
 }
  
 function highlight(text, query) {
-  const escaped = query.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-  return escapeHtml(text).replace(new RegExp(`(${escaped})`, "gi"), "<mark>$1</mark>");
+  const esc = query.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  return escapeHtml(text).replace(new RegExp(`(${esc})`, "gi"), "<mark>$1</mark>");
 }
  
 function escapeHtml(str) {
   return (str || "")
-    .replace(/&/g, "&amp;").replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+    .replace(/&/g,"&amp;").replace(/</g,"&lt;")
+    .replace(/>/g,"&gt;").replace(/"/g,"&quot;");
 }
  
 // ─── Keyboard nav ─────────────────────────────────────────────────────────────
 searchInput.addEventListener("keydown", e => {
   const items = dropdown.querySelectorAll("li");
   if (dropdown.hidden || !items.length) {
-    if (e.key === "Enter") {
-      currentQuery = searchInput.value.trim();
-      currentOffset = 0;
-      fetchPoliticians(currentQuery, currentProvince, 0);
-    }
+    if (e.key === "Enter") { currentQuery = searchInput.value.trim(); currentOffset = 0; fetchPoliticians(currentQuery, currentProvince, 0); }
     return;
   }
- 
-  if (e.key === "ArrowDown") {
-    e.preventDefault();
-    activeIndex = Math.min(activeIndex + 1, items.length - 1);
-  } else if (e.key === "ArrowUp") {
-    e.preventDefault();
-    activeIndex = Math.max(activeIndex - 1, -1);
-  } else if (e.key === "Enter") {
-    e.preventDefault();
-    if (activeIndex >= 0) selectSuggestion(items[activeIndex].dataset.name);
-    else { currentQuery = searchInput.value.trim(); currentOffset = 0; closeDropdown(); fetchPoliticians(currentQuery, currentProvince, 0); }
-    return;
-  } else if (e.key === "Escape") { closeDropdown(); return; }
- 
+  if (e.key === "ArrowDown")      { e.preventDefault(); activeIndex = Math.min(activeIndex + 1, items.length - 1); }
+  else if (e.key === "ArrowUp")   { e.preventDefault(); activeIndex = Math.max(activeIndex - 1, -1); }
+  else if (e.key === "Enter")     { e.preventDefault(); if (activeIndex >= 0) selectSuggestion(items[activeIndex].dataset.name); else { currentQuery = searchInput.value.trim(); currentOffset = 0; closeDropdown(); fetchPoliticians(currentQuery, currentProvince, 0); } return; }
+  else if (e.key === "Escape")    { closeDropdown(); return; }
   items.forEach((li, i) => li.classList.toggle("active", i === activeIndex));
   if (activeIndex >= 0) items[activeIndex].scrollIntoView({ block: "nearest" });
 });
@@ -298,15 +224,12 @@ searchInput.addEventListener("input", () => {
   clearTimeout(debounceTimer);
   debounceTimer = setTimeout(() => fetchSuggestions(searchInput.value.trim()), 200);
 });
- 
 searchInput.addEventListener("blur", () => setTimeout(closeDropdown, 150));
  
 provinceFilter.addEventListener("change", () => {
-  currentProvince   = provinceFilter.value;
-  currentQuery      = "";
-  searchInput.value = "";
-  currentOffset     = 0;
-  closeDropdown();
+  currentProvince = provinceFilter.value;
+  currentQuery = ""; searchInput.value = "";
+  currentOffset = 0; closeDropdown();
   fetchPoliticians("", currentProvince, 0);
 });
  
@@ -317,7 +240,7 @@ function getInitials(name) {
  
 function displayResults(reps) {
   resultsDiv.innerHTML = reps.map(rep => `
-    <div class="card" data-district="${escapeHtml(rep.district)}">
+    <div class="card">
       <div class="avatar">${getInitials(rep.name)}</div>
       <div class="info">
         <h3>${escapeHtml(rep.name)}</h3>
@@ -326,19 +249,6 @@ function displayResults(reps) {
       </div>
     </div>
   `).join("");
- 
-  // Clicking a card zooms the map to that riding
-  resultsDiv.querySelectorAll(".card").forEach(card => {
-    card.addEventListener("click", () => {
-      const key   = normalizeName(card.dataset.district);
-      const entry = ridingLayerMap.get(key);
-      if (!entry) return;
-      try {
-        map.fitBounds(entry.layer.getBounds(), { padding: [60, 60], maxZoom: 10 });
-        entry.layer.openPopup();
-      } catch {}
-    });
-  });
 }
  
 // ─── Pagination ───────────────────────────────────────────────────────────────
@@ -347,18 +257,14 @@ function renderPagination() {
   const hasNext    = currentOffset + LIMIT < totalCount;
   const totalPages = Math.ceil(totalCount / LIMIT);
   const curPage    = Math.floor(currentOffset / LIMIT) + 1;
- 
   if (!hasPrev && !hasNext) { paginationDiv.innerHTML = ""; return; }
- 
   paginationDiv.innerHTML = `
     <button class="page-btn" id="prev-btn" ${hasPrev ? "" : "disabled"}>← Previous</button>
     <span id="page-info">Page ${curPage} of ${totalPages}</span>
     <button class="page-btn" id="next-btn" ${hasNext ? "" : "disabled"}>Next →</button>
   `;
-  document.getElementById("prev-btn").addEventListener("click", () =>
-    fetchPoliticians(currentQuery, currentProvince, currentOffset - LIMIT));
-  document.getElementById("next-btn").addEventListener("click", () =>
-    fetchPoliticians(currentQuery, currentProvince, currentOffset + LIMIT));
+  document.getElementById("prev-btn").addEventListener("click", () => fetchPoliticians(currentQuery, currentProvince, currentOffset - LIMIT));
+  document.getElementById("next-btn").addEventListener("click", () => fetchPoliticians(currentQuery, currentProvince, currentOffset + LIMIT));
 }
  
 // ─── Init ─────────────────────────────────────────────────────────────────────
