@@ -27,9 +27,6 @@ function toSlug(name) {
     .trim();
 }
 
-if (!geojson) {
-  console.warn("Missing boundary for:", rep.district);
-}
 
 async function fetchRidingBoundary(districtName) {
   const slug = toSlug(districtName);
