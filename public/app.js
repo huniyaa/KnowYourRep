@@ -20,13 +20,17 @@ function toSlug(name) {
     .replace(/[\u0300-\u036f]/g, "")          // strip accents: é→e
     .toLowerCase()
     .replace(/[\u2014\u2013\u2012\u2010]/g, "-") // em/en dash → hyphen
-    .replace(/[''']/g, "")                     // strip apostrophes
+    .replace(/['’]/g, "")                   // strip apostrophes
     .replace(/[^a-z0-9\s-]/g, "")             // remove other special chars
     .replace(/\s+/g, "-")                      // spaces → hyphens
     .replace(/-+/g, "-")                       // collapse double hyphens
     .trim();
 }
- 
+
+if (!geojson) {
+  console.warn("Missing boundary for:", rep.district);
+}
+
 async function fetchRidingBoundary(districtName) {
   const slug = toSlug(districtName);
   const url  = `https://represent.opennorth.ca/boundaries/federal-electoral-districts/${slug}/simple_shape`;
@@ -46,13 +50,45 @@ function clearBoundaries() {
  
 async function showBoundaries(politicians) {
   clearBoundaries();
- 
-  // Fetch all boundaries in parallel
-  const results = await Promise.all(
-    politicians.map(rep =>
-      fetchRidingBoundary(rep.district).then(geojson => ({ rep, geojson }))
-    )
-  );
+
+  const bounds = [];
+
+  for (const rep of politicians) {
+    const geojson = await fetchRidingBoundary(rep.district);
+
+    if (!geojson) continue;
+
+    const layer = L.geoJSON(geojson, {
+      style: STYLE_DEFAULT,
+      onEachFeature(_, l) {
+        l.bindPopup(`
+          <strong>${escapeHtml(rep.name)}</strong><br>
+          ${escapeHtml(rep.district)}, ${rep.province}
+        `);
+      }
+    }).addTo(map);
+
+    activeLayers.push(layer);
+
+    try {
+      const b = layer.getBounds();
+      if (b.isValid()) bounds.push(b);
+    } catch {}
+  }
+
+  if (bounds.length > 0) {
+    const combined = bounds.reduce((acc, b) => acc.extend(b), bounds[0]);
+    map.fitBounds(combined, { padding: [40, 40] });
+  }
+  let successCount = 0;
+
+if (geojson) successCount++;
+
+
+if (successCount === 0) {
+  console.warn("No boundaries loaded");
+}
+}
  
   const bounds = [];
  
@@ -91,7 +127,7 @@ async function showBoundaries(politicians) {
     const combined = bounds.reduce((acc, b) => acc.extend(b), bounds[0]);
     map.fitBounds(combined, { padding: [40, 40], maxZoom: 7 });
   }
-}
+
  
 // ─── App state ────────────────────────────────────────────────────────────────
 const searchInput    = document.getElementById("search");
