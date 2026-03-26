@@ -1,4 +1,6 @@
 // ─── Map setup ────────────────────────────────────────────────────────────────
+let markersLayer = L.layerGroup().addTo(map);
+
 const map = L.map("map").setView([56.1304, -106.3468], 4);
  
 L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
@@ -8,67 +10,34 @@ L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
  
 const STYLE_DEFAULT     = { color: "#c0392b", weight: 2, fillColor: "#c0392b", fillOpacity: 0.25 };
 const STYLE_HOVER       = { color: "#922b21", weight: 3, fillColor: "#c0392b", fillOpacity: 0.5  };
- 
-// Holds all currently drawn boundary layers so we can clear them on next search
-let activeLayers = [];
- 
-// ─── Boundary fetching from Represent OpenNorth API ───────────────────────────
-// Converts a riding name like "Beaches—East York" to slug "beaches-east-york"
-function toSlug(name) {
-  return (name || "")
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")          // strip accents: é→e
-    .toLowerCase()
-    .replace(/[\u2014\u2013\u2012\u2010]/g, "-") // em/en dash → hyphen
-    .replace(/['’]/g, "")                   // strip apostrophes
-    .replace(/[^a-z0-9\s-]/g, "")             // remove other special chars
-    .replace(/\s+/g, "-")                      // spaces → hyphens
-    .replace(/-+/g, "-")                       // collapse double hyphens
-    .trim();
-}
 
-async function fetchRidingBoundary(districtName) {
-  const slug = toSlug(districtName);
-  const url  = `https://represent.opennorth.ca/boundaries/federal-electoral-districts/${slug}/simple_shape`;
-  try {
-    const res = await fetch(url);
-    if (!res.ok) return null;
-    return await res.json();
-  } catch {
-    return null;
-  }
-}
- 
 function clearBoundaries() {
   activeLayers.forEach(l => map.removeLayer(l));
   activeLayers = [];
 }
  
-async function showBoundaries(politicians) {
-  clearBoundaries();
+function updateMapMarkers(reps) {
+  markersLayer.clearLayers();
 
   const bounds = [];
 
-  for (const rep of politicians) {
-    const geojson = await fetchRidingBoundary(rep.district);
+  reps.forEach(rep => {
+    const coords = ridingCoords[rep.district];
 
-    if (!geojson) continue;
+    if (!coords) return;
 
-    const layer = L.geoJSON(geojson, {
-      style: STYLE_DEFAULT
-    }).addTo(map);
+    const marker = L.marker([coords.lat, coords.lng])
+      .bindPopup(`
+        <strong>${rep.name}</strong><br>
+        ${rep.district}, ${rep.province}
+      `);
 
-    activeLayers.push(layer);
-
-    try {
-      const b = layer.getBounds();
-      if (b.isValid()) bounds.push(b);
-    } catch {}
-  }
+    markersLayer.addLayer(marker);
+    bounds.push([coords.lat, coords.lng]);
+  });
 
   if (bounds.length > 0) {
-    const combined = bounds.reduce((acc, b) => acc.extend(b), bounds[0]);
-    map.fitBounds(combined, { padding: [40, 40] });
+    map.fitBounds(bounds, { padding: [40, 40] });
   }
 }
  
@@ -97,6 +66,8 @@ let allReps = [];
     allReps = data.politicians || [];
   } catch {}
 })();
+
+
  
 // ─── Main fetch ───────────────────────────────────────────────────────────────
 async function fetchPoliticians(query = "", province = "", offset = 0) {
@@ -130,7 +101,7 @@ async function fetchPoliticians(query = "", province = "", offset = 0) {
       : `Showing ${from}–${to} of ${totalCount} politicians`;
  
     displayResults(data.politicians);
-    showBoundaries(data.politicians); // fetch + draw boundaries async
+    updateMapMarkers(data.politicians); // fetch + draw boundaries async
     renderPagination();
   } catch (err) {
     statusDiv.textContent = "";
