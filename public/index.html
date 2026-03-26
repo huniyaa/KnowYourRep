@@ -5,82 +5,68 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Know Your Rep - Canadian Politicians</title>
   <link rel="stylesheet" href="style.css" />
-  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
 </head>
 <body>
   <header>
     <h1><i class="fas fa-landmark"></i> Know Your Rep</h1>
     <p>Discover your local political representatives beyond party lines</p>
+    <p><small>Data from <a href="https://openparliament.ca" target="_blank">openparliament.ca</a></small></p>
   </header>
   
   <div id="controls">
-    <div class="search-section">
-      <div id="search-wrapper">
-        <input type="text" id="search" placeholder="Search by name, district, or location..." autocomplete="off" />
-        <ul id="dropdown" hidden></ul>
-      </div>
-      <button id="use-location" class="location-btn">
-        <i class="fas fa-location-dot"></i> Use My Location
-      </button>
+    <div id="search-wrapper">
+      <input type="text" id="search" placeholder="Search by name or district…" autocomplete="off" />
+      <ul id="dropdown" hidden></ul>
     </div>
-    
-    <div class="filters">
-      <select id="province-filter">
-        <option value="">All provinces</option>
-        <option value="AB">Alberta</option>
-        <option value="BC">British Columbia</option>
-        <option value="MB">Manitoba</option>
-        <option value="NB">New Brunswick</option>
-        <option value="NL">Newfoundland and Labrador</option>
-        <option value="NS">Nova Scotia</option>
-        <option value="NT">Northwest Territories</option>
-        <option value="NU">Nunavut</option>
-        <option value="ON">Ontario</option>
-        <option value="PE">Prince Edward Island</option>
-        <option value="QC">Quebec</option>
-        <option value="SK">Saskatchewan</option>
-        <option value="YT">Yukon</option>
-      </select>
-      
-      <select id="topic-filter">
-        <option value="">All topics</option>
-        <option value="economy">Economy</option>
-        <option value="healthcare">Healthcare</option>
-        <option value="education">Education</option>
-        <option value="environment">Environment</option>
-        <option value="housing">Housing</option>
-        <option value="immigration">Immigration</option>
-      </select>
-    </div>
+    <select id="province-filter">
+      <option value="">All provinces</option>
+      <option value="AB">Alberta</option>
+      <option value="BC">British Columbia</option>
+      <option value="MB">Manitoba</option>
+      <option value="NB">New Brunswick</option>
+      <option value="NL">Newfoundland and Labrador</option>
+      <option value="NS">Nova Scotia</option>
+      <option value="NT">Northwest Territories</option>
+      <option value="NU">Nunavut</option>
+      <option value="ON">Ontario</option>
+      <option value="PE">Prince Edward Island</option>
+      <option value="QC">Quebec</option>
+      <option value="SK">Saskatchewan</option>
+      <option value="YT">Yukon</option>
+    </select>
+    <button id="use-location" class="location-btn">
+      <i class="fas fa-location-dot"></i> My Location
+    </button>
   </div>
   
   <div id="status"></div>
   <div id="map"></div>
+  <div id="results"></div>
+  <div id="pagination"></div>
   
-  <div id="politician-detail" class="detail-panel" hidden>
-    <div class="detail-header">
-      <h2 id="detail-name"></h2>
-      <button id="close-detail" class="close-btn">&times;</button>
-    </div>
-    <div class="detail-content">
-      <div class="detail-info">
-        <p><strong>Party:</strong> <span id="detail-party"></span></p>
-        <p><strong>District:</strong> <span id="detail-district"></span></p>
-        <p><strong>Years in Office:</strong> <span id="detail-years"></span></p>
-        <p><strong>Key Topics:</strong> <span id="detail-topics"></span></p>
-        <p><strong>Recent Votes:</strong> <span id="detail-votes"></span></p>
-        <div id="detail-quotes"></div>
+  <!-- Politician Detail Modal -->
+  <div id="politician-modal" class="modal" hidden>
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 id="modal-name"></h2>
+        <button id="close-modal" class="close-modal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p><strong><i class="fas fa-tag"></i> Party:</strong> <span id="modal-party"></span></p>
+        <p><strong><i class="fas fa-map-marker-alt"></i> District:</strong> <span id="modal-district"></span></p>
+        <p><strong><i class="fas fa-calendar-alt"></i> Province:</strong> <span id="modal-province"></span></p>
+        <div id="modal-quotes" class="quotes-section">
+          <h4><i class="fas fa-quote-left"></i> Recent Activity</h4>
+          <p id="modal-quotes-text">Loading quotes and statements...</p>
+        </div>
       </div>
     </div>
   </div>
   
-  <div id="results"></div>
-  <div id="pagination"></div>
-  
   <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
-  
+  <script src="ridingCoords.js"></script>
   <script src="app.js"></script>
-
 </body>
 </html>

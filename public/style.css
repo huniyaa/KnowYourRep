@@ -1,8 +1,9 @@
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
 
-Copy
-
-* { box-sizing: border-box; margin: 0; padding: 0; }
- 
 body {
   font-family: 'Segoe UI', sans-serif;
   background: #f0f4f8;
@@ -10,28 +11,51 @@ body {
   min-height: 100vh;
   padding: 40px 20px;
 }
- 
-header { text-align: center; margin-bottom: 32px; }
-header h1 { font-size: 2rem; font-weight: 700; color: #c0392b; }
-header p { margin-top: 6px; color: #555; font-size: 0.95rem; }
-header a { color: #c0392b; }
- 
+
+header {
+  text-align: center;
+  margin-bottom: 32px;
+}
+
+header h1 {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #c0392b;
+}
+
+header h1 i {
+  color: #c0392b;
+}
+
+header p {
+  margin-top: 6px;
+  color: #555;
+  font-size: 0.95rem;
+}
+
+header a {
+  color: #c0392b;
+}
+
 /* ── Controls ── */
 #controls {
   display: flex;
   justify-content: center;
-  align-items: flex-start;
+  align-items: center;
   gap: 12px;
   margin-bottom: 24px;
   flex-wrap: wrap;
+  max-width: 800px;
+  margin-left: auto;
+  margin-right: auto;
 }
- 
+
 #search-wrapper {
   position: relative;
   width: 100%;
   max-width: 380px;
 }
- 
+
 #search {
   width: 100%;
   padding: 10px 16px;
@@ -41,171 +65,9 @@ header a { color: #c0392b; }
   outline: none;
   transition: border-color 0.2s;
 }
-#search:focus { border-color: #c0392b; }
- 
-/* ── Autocomplete dropdown ── */
-#dropdown {
-  position: absolute;
-  top: calc(100% + 4px);
-  left: 0; right: 0;
-  background: white;
-  border: 1px solid #ddd;
-  border-radius: 8px;
-  box-shadow: 0 8px 24px rgba(0,0,0,0.12);
-  list-style: none;
-  z-index: 1000;
-  overflow: hidden;
-  max-height: 320px;
-  overflow-y: auto;
-}
- 
-#dropdown li {
-  padding: 10px 14px;
-  cursor: pointer;
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  border-bottom: 1px solid #f0f0f0;
-  transition: background 0.1s;
-}
-#dropdown li:last-child { border-bottom: none; }
-#dropdown li:hover,
-#dropdown li.active { background: #fff5f5; }
- 
-.suggestion-name { font-size: 0.9rem; font-weight: 600; color: #1a202c; }
-.suggestion-district { font-size: 0.78rem; color: #777; }
-#dropdown mark { background: none; color: #c0392b; font-weight: 700; }
- 
-/* ── Province filter ── */
-#province-filter {
-  padding: 10px 14px;
-  border: 1px solid #ccc;
-  border-radius: 8px;
-  font-size: 0.9rem;
-  background: white;
-  color: #1a202c;
-  outline: none;
-  cursor: pointer;
-  transition: border-color 0.2s;
-  height: 42px;
-}
-#province-filter:focus { border-color: #c0392b; }
- 
-/* ── Status ── */
-#status {
-  text-align: center;
-  color: #555;
-  font-size: 0.9rem;
-  margin-bottom: 16px;
-  min-height: 20px;
-}
- 
-/* ── Map ── */
-#map {
-  height: 480px;
-  max-width: 1100px;
-  margin: 0 auto 28px;
-  border-radius: 12px;
-  box-shadow: 0 4px 16px rgba(0,0,0,0.1);
-  z-index: 0;
-}
- 
-/* Leaflet popup customisation */
-.map-popup {
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-  min-width: 160px;
-}
-.map-popup strong {
-  font-size: 0.95rem;
-  color: #1a202c;
-}
-.popup-party {
-  font-size: 0.8rem;
-  color: #c0392b;
-  font-weight: 600;
-}
-.popup-district {
-  font-size: 0.78rem;
-  color: #777;
-}
- 
-/* ── Results grid ── */
-#results {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-  gap: 14px;
-  max-width: 1100px;
-  margin: 0 auto;
-}
- 
-.card {
-  background: white;
-  border-radius: 10px;
-  padding: 16px 20px;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.07);
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  transition: transform 0.15s, box-shadow 0.15s;
-  cursor: pointer; /* clickable — zooms map to riding */
-}
-.card:hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(0,0,0,0.1); }
- 
-.avatar {
-  width: 46px; height: 46px;
-  border-radius: 50%;
-  background: #c0392b;
-  color: white;
-  font-weight: 700;
-  font-size: 1.1rem;
-  display: flex; align-items: center; justify-content: center;
-  flex-shrink: 0;
-}
- 
-.info { overflow: hidden; }
-.info h3 { font-size: 0.95rem; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.party { font-size: 0.8rem; color: #c0392b; margin-top: 2px; font-weight: 500; }
-.district { font-size: 0.8rem; color: #777; margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
- 
-.error, .empty {
-  text-align: center;
-  color: #c0392b;
-  font-size: 0.95rem;
-  grid-column: 1 / -1;
-  margin-top: 20px;
-}
- 
-/* ── Pagination ── */
-#pagination {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 16px;
-  margin-top: 32px;
-  padding-bottom: 40px;
-}
-#page-info { font-size: 0.9rem; color: #555; }
-.page-btn {
-  padding: 10px 20px;
-  border: none;
-  border-radius: 8px;
-  background: #c0392b;
-  color: white;
-  font-size: 0.9rem;
-  cursor: pointer;
-  transition: background 0.2s;
-}
-.page-btn:hover { background: #a93226; }
-.page-btn:disabled { background: #ccc; cursor: default; }
 
-/* Add to existing style.css */
-
-.search-section {
-  display: flex;
-  gap: 12px;
-  align-items: center;
+#search:focus {
+  border-color: #c0392b;
 }
 
 .location-btn {
@@ -225,111 +87,357 @@ header a { color: #c0392b; }
   border-color: #c0392b;
 }
 
-.filters {
-  display: flex;
-  gap: 12px;
+/* ── Autocomplete dropdown ── */
+#dropdown {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+  list-style: none;
+  z-index: 1000;
+  overflow: hidden;
+  max-height: 320px;
+  overflow-y: auto;
 }
 
-#topic-filter {
+#dropdown li {
+  padding: 10px 14px;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  border-bottom: 1px solid #f0f0f0;
+  transition: background 0.1s;
+}
+
+#dropdown li:last-child {
+  border-bottom: none;
+}
+
+#dropdown li:hover, #dropdown li.active {
+  background: #fff5f5;
+}
+
+.suggestion-name {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #1a202c;
+}
+
+.suggestion-district {
+  font-size: 0.78rem;
+  color: #777;
+}
+
+#dropdown mark {
+  background: none;
+  color: #c0392b;
+  font-weight: 700;
+}
+
+/* ── Province filter ── */
+#province-filter {
   padding: 10px 14px;
   border: 1px solid #ccc;
   border-radius: 8px;
   font-size: 0.9rem;
   background: white;
+  color: #1a202c;
+  outline: none;
+  cursor: pointer;
+  transition: border-color 0.2s;
+  height: 42px;
+}
+
+#province-filter:focus {
+  border-color: #c0392b;
+}
+
+/* ── Status ── */
+#status {
+  text-align: center;
+  color: #555;
+  font-size: 0.9rem;
+  margin-bottom: 16px;
+  min-height: 20px;
+}
+
+/* ── Map ── */
+#map {
+  height: 480px;
+  max-width: 1100px;
+  margin: 0 auto 28px;
+  border-radius: 12px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+  z-index: 0;
+}
+
+/* Leaflet popup customisation */
+.map-popup {
+  cursor: pointer;
+  padding: 4px;
+}
+
+.map-popup strong {
+  font-size: 0.95rem;
+  color: #1a202c;
+  display: block;
+}
+
+.popup-party {
+  font-size: 0.8rem;
+  color: #c0392b;
+  font-weight: 600;
+  margin: 4px 0;
+}
+
+.popup-district {
+  font-size: 0.78rem;
+  color: #777;
+}
+
+/* ── Results grid ── */
+#results {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 14px;
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+.card {
+  background: white;
+  border-radius: 10px;
+  padding: 16px 20px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.07);
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  transition: transform 0.15s, box-shadow 0.15s;
   cursor: pointer;
 }
 
-.detail-panel {
+.card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0,0,0,0.1);
+}
+
+.avatar {
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  background: #c0392b;
+  color: white;
+  font-weight: 700;
+  font-size: 1.1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.info {
+  overflow: hidden;
+  flex: 1;
+}
+
+.info h3 {
+  font-size: 0.95rem;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.party {
+  font-size: 0.8rem;
+  color: #c0392b;
+  margin-top: 2px;
+  font-weight: 500;
+}
+
+.district {
+  font-size: 0.8rem;
+  color: #777;
+  margin-top: 1px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.error, .empty {
+  text-align: center;
+  color: #c0392b;
+  font-size: 0.95rem;
+  grid-column: 1 / -1;
+  margin-top: 20px;
+}
+
+/* ── Modal Styles ── */
+.modal {
   position: fixed;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 2000;
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.modal-content {
   background: white;
   border-radius: 12px;
-  box-shadow: 0 10px 40px rgba(0,0,0,0.2);
   max-width: 500px;
   width: 90%;
   max-height: 80vh;
   overflow-y: auto;
-  z-index: 2000;
-  animation: slideIn 0.3s ease-out;
+  animation: slideUp 0.3s ease;
 }
 
-@keyframes slideIn {
+@keyframes slideUp {
   from {
+    transform: translateY(50px);
     opacity: 0;
-    transform: translate(-50%, -45%);
   }
   to {
+    transform: translateY(0);
     opacity: 1;
-    transform: translate(-50%, -50%);
   }
 }
 
-.detail-header {
+.modal-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
   padding: 20px;
   border-bottom: 2px solid #f0f0f0;
+  background: #fff5f5;
+  border-radius: 12px 12px 0 0;
 }
 
-.detail-header h2 {
+.modal-header h2 {
   color: #c0392b;
   margin: 0;
+  font-size: 1.3rem;
 }
 
-.close-btn {
+.close-modal {
   background: none;
   border: none;
   font-size: 28px;
   cursor: pointer;
   color: #999;
   transition: color 0.2s;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
 }
 
-.close-btn:hover {
+.close-modal:hover {
+  background: #f0f0f0;
   color: #c0392b;
 }
 
-.detail-content {
+.modal-body {
   padding: 20px;
 }
 
-.detail-info p {
+.modal-body p {
   margin: 12px 0;
   line-height: 1.5;
 }
 
-.detail-info strong {
+.modal-body strong {
   color: #555;
-  min-width: 100px;
+  min-width: 80px;
   display: inline-block;
 }
 
-#detail-topics {
-  display: inline-block;
-  background: #f0f0f0;
-  padding: 4px 8px;
-  border-radius: 6px;
-  font-size: 0.9rem;
+.modal-body strong i {
+  width: 20px;
+  margin-right: 8px;
+  color: #c0392b;
 }
 
-.map-popup {
-  cursor: pointer;
+.quotes-section {
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 2px solid #f0f0f0;
 }
 
-.map-popup:hover {
+.quotes-section h4 {
+  color: #c0392b;
+  margin-bottom: 12px;
+  font-size: 1rem;
+}
+
+#modal-quotes-text {
+  font-style: italic;
+  color: #666;
   background: #f9f9f9;
+  padding: 12px;
+  border-radius: 8px;
+  border-left: 3px solid #c0392b;
+}
+
+/* ── Pagination ── */
+#pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 16px;
+  margin-top: 32px;
+  padding-bottom: 40px;
+}
+
+#page-info {
+  font-size: 0.9rem;
+  color: #555;
+}
+
+.page-btn {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 8px;
+  background: #c0392b;
+  color: white;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.page-btn:hover:not(:disabled) {
+  background: #a93226;
+}
+
+.page-btn:disabled {
+  background: #ccc;
+  cursor: default;
 }
 
 .loading-spinner {
   text-align: center;
-  padding: 40px;
+  padding: 20px;
 }
 
 .loading-spinner i {
-  font-size: 32px;
+  font-size: 24px;
   color: #c0392b;
   animation: spin 1s linear infinite;
 }
@@ -337,4 +445,24 @@ header a { color: #c0392b; }
 @keyframes spin {
   from { transform: rotate(0deg); }
   to { transform: rotate(360deg); }
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  #controls {
+    flex-direction: column;
+    padding: 0 16px;
+  }
+  
+  #search-wrapper {
+    max-width: 100%;
+  }
+  
+  .location-btn {
+    width: 100%;
+  }
+  
+  #province-filter {
+    width: 100%;
+  }
 }
