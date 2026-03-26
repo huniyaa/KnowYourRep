@@ -55,13 +55,7 @@ async function showBoundaries(politicians) {
     if (!geojson) continue;
 
     const layer = L.geoJSON(geojson, {
-      style: STYLE_DEFAULT,
-      onEachFeature(_, l) {
-        l.bindPopup(`
-          <strong>${escapeHtml(rep.name)}</strong><br>
-          ${escapeHtml(rep.district)}, ${rep.province}
-        `);
-      }
+      style: STYLE_DEFAULT
     }).addTo(map);
 
     activeLayers.push(layer);
@@ -76,14 +70,6 @@ async function showBoundaries(politicians) {
     const combined = bounds.reduce((acc, b) => acc.extend(b), bounds[0]);
     map.fitBounds(combined, { padding: [40, 40] });
   }
-  let successCount = 0;
-
-if (geojson) successCount++;
-
-
-if (successCount === 0) {
-  console.warn("No boundaries loaded");
-}
 }
  
   const bounds = [];
