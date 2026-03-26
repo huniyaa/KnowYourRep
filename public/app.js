@@ -20,6 +20,7 @@ const LIMIT = 20;
 let debounceTimer = null;
 let activeIndex = -1;
 let allReps = [];
+let map; // Store map reference
 
 // ─── Initialize map after DOM is ready ────────────────────────────────────────
 function initMap() {
@@ -27,24 +28,21 @@ function initMap() {
   const mapElement = document.getElementById("map");
   if (!mapElement) {
     console.error("Map element not found!");
-    return;
+    return null;
   }
   
   // Create map
-  const map = L.map("map").setView([56.1304, -106.3468], 4);
+  const newMap = L.map("map").setView([56.1304, -106.3468], 4);
   
   L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
     maxZoom: 18,
     attribution: "© OpenStreetMap contributors"
-  }).addTo(map);
+  }).addTo(newMap);
   
   // Create markers layer
-  markersLayer = L.layerGroup().addTo(map);
+  markersLayer = L.layerGroup().addTo(newMap);
   
-  // Store map in window for global access
-  window.map = map;
-  
-  return map;
+  return newMap;
 }
 
 // ─── Main fetch function ──────────────────────────────────────────────────────
@@ -90,7 +88,7 @@ async function fetchPoliticians(query = "", province = "", offset = 0) {
 
 // ─── Update map markers ───────────────────────────────────────────────────────
 function updateMapMarkers(politicians) {
-  if (!markersLayer || !window.map) return;
+  if (!markersLayer || !map) return;
   
   markersLayer.clearLayers();
   const bounds = [];
@@ -115,8 +113,8 @@ function updateMapMarkers(politicians) {
     bounds.push([coords.lat, coords.lng]);
   });
   
-  if (bounds.length > 0 && window.map) {
-    window.map.fitBounds(bounds, { padding: [40, 40] });
+  if (bounds.length > 0 && map) {
+    map.fitBounds(bounds, { padding: [40, 40] });
   }
 }
 
@@ -136,7 +134,7 @@ function displayResults(politicians) {
   `).join('');
 }
 
-// ─── Show politician modal ────────────────────────────────────────────────────
+// ─── Show politician modal (only when clicked) ─────────────────────────────────
 window.showPoliticianModal = (name, party, district, province) => {
   const modalName = document.getElementById("modal-name");
   const modalParty = document.getElementById("modal-party");
@@ -148,9 +146,9 @@ window.showPoliticianModal = (name, party, district, province) => {
   if (modalParty) modalParty.textContent = party;
   if (modalDistrict) modalDistrict.textContent = district;
   if (modalProvince) modalProvince.textContent = province;
-  if (modalQuotes) modalQuotes.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Loading quotes...';
+  if (modalQuotes) modalQuotes.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Loading statements...';
   
-  if (modal) modal.hidden = false;
+  if (modal) modal.style.display = 'flex';
   
   // Fetch quotes for this politician
   fetchQuotesForPolitician(name);
@@ -164,7 +162,7 @@ async function fetchQuotesForPolitician(name) {
     // Use OpenParliament API to get statements
     const response = await fetch(`https://api.openparliament.ca/statements/?format=json&limit=5&politician=${encodeURIComponent(name)}`);
     
-    if (!response.ok) throw new Error("Failed to fetch quotes");
+    if (!response.ok) throw new Error("Failed to fetch statements");
     
     const data = await response.json();
     
@@ -179,31 +177,33 @@ async function fetchQuotesForPolitician(name) {
       modalQuotes.innerHTML = "No recent statements found for this politician.";
     }
   } catch (error) {
-    console.error("Error fetching quotes:", error);
-    modalQuotes.innerHTML = "Unable to load quotes at this time.";
+    console.error("Error fetching statements:", error);
+    modalQuotes.innerHTML = "Unable to load statements at this time.";
   }
 }
 
-// Close modal
+// ─── Close modal functions ────────────────────────────────────────────────────
+function closeModalFunction() {
+  if (modal) modal.style.display = 'none';
+}
+
 if (closeModal) {
-  closeModal.addEventListener("click", () => {
-    if (modal) modal.hidden = true;
-  });
+  closeModal.addEventListener("click", closeModalFunction);
 }
 
 // Close modal on outside click
 if (modal) {
   modal.addEventListener("click", (e) => {
     if (e.target === modal) {
-      modal.hidden = true;
+      closeModalFunction();
     }
   });
 }
 
 // Close modal on ESC
 document.addEventListener("keydown", (e) => {
-  if (e.key === "Escape" && modal && !modal.hidden) {
-    modal.hidden = true;
+  if (e.key === "Escape" && modal && modal.style.display === 'flex') {
+    closeModalFunction();
   }
 });
 
@@ -215,7 +215,7 @@ if (useLocationBtn) {
       navigator.geolocation.getCurrentPosition(
         async (position) => {
           const { latitude, longitude } = position.coords;
-          if (window.map) window.map.setView([latitude, longitude], 10);
+          if (map) map.setView([latitude, longitude], 10);
           await findNearestDistrict(latitude, longitude);
         },
         (error) => {
@@ -439,8 +439,13 @@ function renderPagination() {
 
 // ─── Load initial data and setup ──────────────────────────────────────────────
 async function init() {
-  // Initialize map first
-  initMap();
+  // Initialize map
+  map = initMap();
+  
+  // Make sure modal is hidden initially
+  if (modal) {
+    modal.style.display = 'none';
+  }
   
   // Load all politicians for autocomplete
   try {

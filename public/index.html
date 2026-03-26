@@ -46,25 +46,24 @@
   <div id="results"></div>
   <div id="pagination"></div>
   
-  <!-- Politician Detail Modal -->
-  <div id="politician-modal" class="modal" hidden>
-    <div class="modal-content">
-      <div class="modal-header">
-        <h2 id="modal-name"></h2>
-        <button id="close-modal" class="close-modal">&times;</button>
-      </div>
-      <div class="modal-body">
-        <p><strong><i class="fas fa-tag"></i> Party:</strong> <span id="modal-party"></span></p>
-        <p><strong><i class="fas fa-map-marker-alt"></i> District:</strong> <span id="modal-district"></span></p>
-        <p><strong><i class="fas fa-calendar-alt"></i> Province:</strong> <span id="modal-province"></span></p>
-        <div class="quotes-section">
-          <h4><i class="fas fa-quote-left"></i> Recent Statements</h4>
-          <div id="modal-quotes-text"></div>
-        </div>
+  <!-- Politician Detail Modal - Remove the 'hidden' attribute -->
+<div id="politician-modal" class="modal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h2 id="modal-name"></h2>
+      <button id="close-modal" class="close-modal">&times;</button>
+    </div>
+    <div class="modal-body">
+      <p><strong><i class="fas fa-tag"></i> Party:</strong> <span id="modal-party"></span></p>
+      <p><strong><i class="fas fa-map-marker-alt"></i> District:</strong> <span id="modal-district"></span></p>
+      <p><strong><i class="fas fa-calendar-alt"></i> Province:</strong> <span id="modal-province"></span></p>
+      <div class="quotes-section">
+        <h4><i class="fas fa-quote-left"></i> Recent Statements</h4>
+        <div id="modal-quotes-text"></div>
       </div>
     </div>
   </div>
-  
+</div>
   <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
   <script src="ridingCoords.js"></script>
   <script src="app.js"></script>
