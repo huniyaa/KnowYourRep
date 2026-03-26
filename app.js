@@ -30,17 +30,27 @@ function normalizeName(name) {
     .trim();
 }
  
-fetch("ridings.geojson")
-  .then(r => r.json())
+fetch("/ridings.geojson")
+  .then(r => {
+    if (!r.ok) throw new Error(`HTTP ${r.status} — make sure ridings.geojson is in your public/ folder`);
+    return r.json();
+  })
   .then(data => {
+    if (data.features?.length) {
+      console.log(`✅ ridings.geojson loaded: ${data.features.length} features`);
+      console.log("📋 Property keys:", Object.keys(data.features[0].properties));
+    }
+ 
     geojsonLayer = L.geoJSON(data, {
       style: () => STYLE_DEFAULT,
       onEachFeature(feature, layer) {
-        // Try common Elections Canada property names in order of preference
+        // Try every known Elections Canada English name field
         const rawName =
-          feature.properties.FEDENAME ||  // English name (2015+ shapefiles)
-          feature.properties.FEDNAME  ||  // older bilingual name
-          feature.properties.name    ||
+          feature.properties.FEDENAME ||  // 2023 SHP (English)
+          feature.properties.ENNAME   ||  // alternate
+          feature.properties.FEDNAME  ||  // older bilingual
+          feature.properties.name     ||
+          feature.properties.NAME     ||
           "";
  
         const key = normalizeName(rawName);
@@ -75,8 +85,8 @@ fetch("ridings.geojson")
       pendingHighlight = [];
     }
   })
-  .catch(() => {
-    console.warn("ridings.geojson not found or failed to load.");
+    .catch(err => {
+    console.error("❌ ridings.geojson error:", err.message);
   });
  
 // ─── Highlight helpers ────────────────────────────────────────────────────────
