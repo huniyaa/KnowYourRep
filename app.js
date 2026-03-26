@@ -259,3 +259,24 @@ function renderPagination() {
   document.getElementById("next-btn").addEventListener("click", () =>
     fetchPoliticians(currentQuery, currentProvince, currentOffset + LIMIT));
 }
+
+let geojsonLayer;
+
+fetch("ridings.geojson")
+  .then(res => res.json())
+  .then(data => {
+    geojsonLayer = L.geoJSON(data, {
+      style: {
+        color: "#c0392b",
+        weight: 1,
+        fillOpacity: 0.1
+      },
+      onEachFeature: (feature, layer) => {
+        console.log(feature.properties); // 👈 IMPORTANT
+
+        const name = feature.properties.FEDNAME;
+
+        layer.bindPopup(`<strong>${name}</strong>`);
+      }
+    }).addTo(map);
+  });
