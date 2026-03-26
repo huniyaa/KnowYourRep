@@ -72,45 +72,6 @@ async function showBoundaries(politicians) {
   }
 }
  
-  const bounds = [];
- 
-  results.forEach(({ rep, geojson }) => {
-    if (!geojson) return;
- 
-    const layer = L.geoJSON(geojson, {
-      style: STYLE_DEFAULT,
-      onEachFeature(_, l) {
-        l.bindPopup(`
-          <div class="map-popup">
-            <strong>${escapeHtml(rep.name)}</strong>
-            <span class="popup-party">${escapeHtml(rep.party)}</span>
-            <span class="popup-district">${escapeHtml(rep.district)}${rep.province ? `, ${rep.province}` : ""}</span>
-          </div>
-        `);
-        l.on({
-          mouseover(e) { e.target.setStyle(STYLE_HOVER); e.target.bringToFront(); },
-          mouseout(e)  { e.target.setStyle(STYLE_DEFAULT); }
-        });
-      }
-    }).addTo(map);
- 
-    activeLayers.push(layer);
- 
-    try {
-      const b = layer.getBounds();
-      if (b.isValid()) bounds.push(b);
-    } catch {}
-  });
- 
-  // Zoom map to fit all highlighted ridings
-  if (bounds.length === 1) {
-    map.fitBounds(bounds[0], { padding: [40, 40], maxZoom: 10 });
-  } else if (bounds.length > 1) {
-    const combined = bounds.reduce((acc, b) => acc.extend(b), bounds[0]);
-    map.fitBounds(combined, { padding: [40, 40], maxZoom: 7 });
-  }
-
- 
 // ─── App state ────────────────────────────────────────────────────────────────
 const searchInput    = document.getElementById("search");
 const dropdown       = document.getElementById("dropdown");
