@@ -1,46 +1,151 @@
 // ─── Map setup ────────────────────────────────────────────────────────────────
-const map = L.map("map").setView([56.1304, -106.3468], 4);
 let markersLayer = L.layerGroup().addTo(map);
+let currentPoliticians = [];
 
- 
+const map = L.map("map").setView([56.1304, -106.3468], 4);
 L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
   maxZoom: 18,
   attribution: "© OpenStreetMap contributors"
 }).addTo(map);
- 
-const STYLE_DEFAULT     = { color: "#c0392b", weight: 2, fillColor: "#c0392b", fillOpacity: 0.25 };
-const STYLE_HOVER       = { color: "#922b21", weight: 3, fillColor: "#c0392b", fillOpacity: 0.5  };
 
-function clearBoundaries() {
-  activeLayers.forEach(l => map.removeLayer(l));
-  activeLayers = [];
+// ─── Location detection ───────────────────────────────────────────────────────
+document.getElementById("use-location")?.addEventListener("click", () => {
+  if ("geolocation" in navigator) {
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const { latitude, longitude } = position.coords;
+        map.setView([latitude, longitude], 12);
+        findNearestDistrict(latitude, longitude);
+      },
+      (error) => {
+        console.error("Geolocation error:", error);
+        statusDiv.textContent = "Unable to get your location. Please enter your district manually.";
+      }
+    );
+  }
+});
+
+async function findNearestDistrict(lat, lng) {
+  // Find nearest district based on coordinates
+  // This would use a spatial query against district boundaries
+  statusDiv.textContent = "Finding your electoral district...";
+  
+  // For now, let's just show a notification
+  statusDiv.textContent = "District detection coming soon!";
+  setTimeout(() => {
+    statusDiv.textContent = "";
+  }, 3000);
 }
- 
+
+// ─── Politician detail view ───────────────────────────────────────────────────
+const detailPanel = document.getElementById("politician-detail");
+const closeDetail = document.getElementById("close-detail");
+
+closeDetail?.addEventListener("click", () => {
+  detailPanel.hidden = true;
+});
+
+function showPoliticianDetail(politician) {
+  document.getElementById("detail-name").textContent = politician.name;
+  document.getElementById("detail-party").textContent = politician.party;
+  document.getElementById("detail-district").textContent = `${politician.district}, ${politician.province}`;
+  document.getElementById("detail-years").textContent = politician.years_in_office || "N/A";
+  
+  // Generate key topics (this would come from actual data)
+  const topics = ["Healthcare", "Economy", "Education", "Environment"];
+  document.getElementById("detail-topics").textContent = topics.slice(0, 3).join(", ");
+  
+  // Generate sample votes data
+  document.getElementById("detail-votes").textContent = "Recent votes data coming soon";
+  
+  // Generate sample quotes
+  const quotesDiv = document.getElementById("detail-quotes");
+  quotesDiv.innerHTML = `
+    <h4>Recent Quotes</h4>
+    <blockquote>"Working hard for ${politician.district} residents."</blockquote>
+  `;
+  
+  detailPanel.hidden = false;
+}
+
+// ─── Update map markers with click handlers ───────────────────────────────────
 function updateMapMarkers(reps) {
   markersLayer.clearLayers();
-
   const bounds = [];
-
+  
   reps.forEach(rep => {
     const coords = ridingCoords[rep.district];
-
     if (!coords) return;
-
+    
     const marker = L.marker([coords.lat, coords.lng])
       .bindPopup(`
-        <strong>${rep.name}</strong><br>
-        ${rep.district}, ${rep.province}
+        <div class="map-popup" onclick="window.showPoliticianDetailFromMarker('${rep.id}')">
+          <strong>${rep.name}</strong><br>
+          ${rep.party}<br>
+          ${rep.district}, ${rep.province}
+        </div>
       `);
-
+    
     markersLayer.addLayer(marker);
     bounds.push([coords.lat, coords.lng]);
   });
-
+  
   if (bounds.length > 0) {
     map.fitBounds(bounds, { padding: [40, 40] });
   }
 }
- 
+
+// Make showPoliticianDetail available globally for the popup
+window.showPoliticianDetailFromMarker = (politicianId) => {
+  const politician = currentPoliticians.find(p => p.id === politicianId);
+  if (politician) {
+    showPoliticianDetail(politician);
+  }
+};
+
+// ─── Enhanced card click handler ──────────────────────────────────────────────
+function displayResults(reps) {
+  currentPoliticians = reps;
+  resultsDiv.innerHTML = reps.map(rep => `
+    <div class="card" data-id="${rep.id}">
+      <div class="avatar">${getInitials(rep.name)}</div>
+      <div class="info">
+        <h3>${escapeHtml(rep.name)}</h3>
+        <p class="party">${escapeHtml(rep.party)}</p>
+        <p class="district">${escapeHtml(rep.district)}${rep.province ? `, ${rep.province}` : ""}</p>
+        ${rep.years_in_office ? `<p class="years">📅 ${rep.years_in_office} years in office</p>` : ""}
+      </div>
+    </div>
+  `).join("");
+  
+  // Add click handlers to cards
+  document.querySelectorAll(".card").forEach(card => {
+    card.addEventListener("click", () => {
+      const id = card.dataset.id;
+      const politician = reps.find(p => p.id === id);
+      if (politician) {
+        showPoliticianDetail(politician);
+      }
+    });
+  });
+}
+
+// ─── Topic filter handling ────────────────────────────────────────────────────
+const topicFilter = document.getElementById("topic-filter");
+topicFilter?.addEventListener("change", () => {
+  const topic = topicFilter.value;
+  if (topic) {
+    statusDiv.textContent = `Filtering by topic: ${topic}`;
+    // Here you would fetch politicians by topic
+    setTimeout(() => {
+      statusDiv.textContent = "";
+    }, 3000);
+  } else {
+    fetchPoliticians(currentQuery, currentProvince, 0);
+  }
+});
+
+// Rest of your existing app.js code remains the same..
 // ─── App state ────────────────────────────────────────────────────────────────
 const searchInput    = document.getElementById("search");
 const dropdown       = document.getElementById("dropdown");

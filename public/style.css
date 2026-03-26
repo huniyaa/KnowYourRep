@@ -199,3 +199,142 @@ header a { color: #c0392b; }
 }
 .page-btn:hover { background: #a93226; }
 .page-btn:disabled { background: #ccc; cursor: default; }
+
+/* Add to existing style.css */
+
+.search-section {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.location-btn {
+  padding: 10px 16px;
+  background: white;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-size: 0.9rem;
+  white-space: nowrap;
+}
+
+.location-btn:hover {
+  background: #c0392b;
+  color: white;
+  border-color: #c0392b;
+}
+
+.filters {
+  display: flex;
+  gap: 12px;
+}
+
+#topic-filter {
+  padding: 10px 14px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  background: white;
+  cursor: pointer;
+}
+
+.detail-panel {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+  max-width: 500px;
+  width: 90%;
+  max-height: 80vh;
+  overflow-y: auto;
+  z-index: 2000;
+  animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -45%);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%);
+  }
+}
+
+.detail-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px;
+  border-bottom: 2px solid #f0f0f0;
+}
+
+.detail-header h2 {
+  color: #c0392b;
+  margin: 0;
+}
+
+.close-btn {
+  background: none;
+  border: none;
+  font-size: 28px;
+  cursor: pointer;
+  color: #999;
+  transition: color 0.2s;
+}
+
+.close-btn:hover {
+  color: #c0392b;
+}
+
+.detail-content {
+  padding: 20px;
+}
+
+.detail-info p {
+  margin: 12px 0;
+  line-height: 1.5;
+}
+
+.detail-info strong {
+  color: #555;
+  min-width: 100px;
+  display: inline-block;
+}
+
+#detail-topics {
+  display: inline-block;
+  background: #f0f0f0;
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 0.9rem;
+}
+
+.map-popup {
+  cursor: pointer;
+}
+
+.map-popup:hover {
+  background: #f9f9f9;
+}
+
+.loading-spinner {
+  text-align: center;
+  padding: 40px;
+}
+
+.loading-spinner i {
+  font-size: 32px;
+  color: #c0392b;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
