@@ -1024,3 +1024,40 @@ blockquote footer {
   font-size: 1.3rem;
   flex: 1;
 }
+
+/* Single quote styling */
+#modal-quotes-text blockquote {
+  margin: 16px 0;
+  padding: 20px;
+  background: #f9f9f9;
+  border-left: 4px solid #c0392b;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+}
+
+#modal-quotes-text blockquote:hover {
+  background: #fff5f5;
+  transform: translateX(4px);
+}
+
+#modal-quotes-text blockquote i.fa-quote-left {
+  color: #c0392b;
+  margin-right: 8px;
+  opacity: 0.5;
+  float: left;
+  font-size: 14px;
+}
+
+#modal-quotes-text blockquote div {
+  margin-left: 24px;
+  line-height: 1.6;
+  color: #333;
+  font-size: 14px;
+}
+
+#modal-quotes-text blockquote footer {
+  margin-top: 12px;
+  font-size: 11px;
+  color: #999;
+  font-style: normal;
+}
