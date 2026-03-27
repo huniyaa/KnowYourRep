@@ -86,46 +86,99 @@ async function fetchPoliticians(query = "", province = "", offset = 0) {
   }
 }
 
+async function fetchPoliticians(query = "", province = "", offset = 0) {
+  if (!statusDiv) return;
+  
+  statusDiv.innerHTML = '<div class="loading-spinner"><i class="fas fa-spinner fa-spin"></i> Loading...</div>';
+  if (resultsDiv) resultsDiv.innerHTML = "";
+  if (paginationDiv) paginationDiv.innerHTML = "";
+  
+  const params = new URLSearchParams({ limit: LIMIT, offset });
+  if (query) params.set("name", query);
+  if (province) params.set("province", province);
+  
+  try {
+    const res = await fetch(`/api/politicians?${params}`);
+    if (!res.ok) throw new Error(`Server error: ${res.status}`);
+    
+    const data = await res.json();
+    const politicians = data.politicians;
+    totalCount = data.count;
+    currentOffset = data.offset;
+    
+    // DEBUG: Log what we got
+    console.log(`Fetched ${politicians.length} politicians for province: ${province || "ALL"}`);
+    console.log("Politicians:", politicians.map(p => ({ name: p.name, district: p.district, province: p.province })));
+    
+    if (!politicians.length) {
+      statusDiv.innerHTML = '<p class="empty">No politicians found. Try adjusting your search.</p>';
+      if (markersLayer) markersLayer.clearLayers();
+      return;
+    }
+    
+    const from = offset + 1;
+    const to = Math.min(offset + LIMIT, totalCount);
+    statusDiv.innerHTML = `Found ${totalCount} result${totalCount !== 1 ? "s" : ""} — showing ${from}–${to}`;
+    
+    displayResults(politicians);
+    updateMapMarkers(politicians);
+    renderPagination();
+    
+  } catch (err) {
+    console.error(err);
+    statusDiv.innerHTML = `<p class="error">⚠️ ${err.message}</p>`;
+  }
+}
+
 // ─── Update map markers with fallback support ─────────────────────────────────
 // ─── Update map markers with party colors and province zoom ─────────────────
+// ─── Update map markers with party colors ─────────────────────────────────────
 function updateMapMarkers(politicians) {
-  if (!markersLayer || !map) return;
+  if (!markersLayer || !map) {
+    console.error("Markers layer or map not initialized");
+    return;
+  }
+  
+  console.log(`Updating map with ${politicians.length} politicians`);
   
   markersLayer.clearLayers();
   const bounds = [];
   let markersAdded = 0;
-  let fallbackUsed = 0;
-  const provinceMarkers = {};
+  let noCoords = [];
   
   politicians.forEach(politician => {
-    // Get coordinates using the new function
-    let coords = window.getRidingCoordinates 
-      ? window.getRidingCoordinates(politician.district, politician.province)
-      : (window.ridingCoords && window.ridingCoords[politician.district]);
+    // Try to get coordinates
+    let coords = null;
+    
+    // Try exact match from ridingCoords
+    if (window.ridingCoords && window.ridingCoords[politician.district]) {
+      coords = window.ridingCoords[politician.district];
+    }
+    // Try the getRidingCoordinates function
+    else if (window.getRidingCoordinates) {
+      coords = window.getRidingCoordinates(politician.district, politician.province);
+    }
     
     if (!coords) {
-      console.log(`No coordinates for: ${politician.district}`);
+      noCoords.push(`${politician.district} (${politician.province})`);
       return;
     }
     
-    // Track markers by province for debugging
-    if (!provinceMarkers[politician.province]) {
-      provinceMarkers[politician.province] = 0;
-    }
-    provinceMarkers[politician.province]++;
-    
-    // Track if we're using a fallback (province center)
-    if (!window.ridingCoords[politician.district]) {
-      fallbackUsed++;
-    }
     markersAdded++;
     
-    // Get party color using the new function
-    const markerColor = window.getMarkerColor 
-      ? window.getMarkerColor(politician.party) 
-      : "#c0392b";
+    // Get party color
+    let markerColor = "#c0392b"; // Default red
+    if (window.getMarkerColor) {
+      markerColor = window.getMarkerColor(politician.party);
+    } else if (politician.party) {
+      if (politician.party.includes("Liberal")) markerColor = "#d1001f";
+      else if (politician.party.includes("Conservative")) markerColor = "#1a4782";
+      else if (politician.party.includes("NDP")) markerColor = "#f48d2b";
+      else if (politician.party.includes("Green")) markerColor = "#3d9b35";
+      else if (politician.party.includes("Bloc")) markerColor = "#00b5e2";
+    }
     
-    // Create custom marker with party color
+    // Create custom marker
     const customIcon = L.divIcon({
       className: 'custom-marker',
       html: `<div style="
@@ -150,7 +203,6 @@ function updateMapMarkers(politicians) {
         </div>
         <div class="popup-district">${escapeHtml(politician.district)}</div>
         <div class="popup-district">${escapeHtml(politician.province)}</div>
-        ${!window.ridingCoords[politician.district] ? '<div class="popup-district" style="color: orange;">📍 Approximate location</div>' : ''}
       </div>
     `;
     
@@ -161,53 +213,19 @@ function updateMapMarkers(politicians) {
     bounds.push([coords.lat, coords.lng]);
   });
   
-  // Smooth zoom to fit all markers with animation
+  // Log what happened
+  console.log(`Markers added: ${markersAdded} out of ${politicians.length} politicians`);
+  if (noCoords.length > 0) {
+    console.warn(`Missing coordinates for ${noCoords.length} districts:`, noCoords.slice(0, 5));
+  }
+  
+  // Zoom to fit all markers
   if (bounds.length > 0 && map) {
-    // Add a small delay to ensure markers are added
-    setTimeout(() => {
-      map.fitBounds(bounds, { 
-        padding: [50, 50],
-        maxZoom: 12, // Don't zoom in too close on province view
-        animate: true,
-        duration: 0.5
-      });
-    }, 100);
-  }
-  
-  // Log marker counts by province
-  console.log(`Map updated: ${markersAdded} markers added`);
-  console.log('Markers by province:', provinceMarkers);
-  if (fallbackUsed > 0) {
-    console.log(`⚠️ ${fallbackUsed} markers using approximate (province center) coordinates`);
-  }
-  // Add this at the end of updateMapMarkers function
-function updateProvinceStats(politicians) {
-  const statsDiv = document.getElementById('province-stats');
-  if (!statsDiv) return;
-  
-  const stats = {};
-  politicians.forEach(p => {
-    stats[p.province] = (stats[p.province] || 0) + 1;
-  });
-  
-  const sortedStats = Object.entries(stats).sort((a, b) => b[1] - a[1]);
-  
-  if (sortedStats.length > 0 && sortedStats.length < 13) { // Show only when filtering
-    statsDiv.style.display = 'block';
-    const statsHtml = `
-      <div class="stats-container">
-        ${sortedStats.map(([province, count]) => `
-          <div class="province-stat">
-            <strong>${count}</strong> MPs in ${province}
-          </div>
-        `).join('')}
-      </div>
-    `;
-    statsDiv.querySelector('.stats-container').innerHTML = statsHtml;
+    map.fitBounds(bounds, { padding: [50, 50] });
+    console.log(`Map zoomed to show ${bounds.length} markers`);
   } else {
-    statsDiv.style.display = 'none';
+    console.warn("No bounds to fit - no markers added");
   }
-}
 }
 
 function initQuickFilters() {
@@ -511,41 +529,21 @@ if (searchInput) {
   searchInput.addEventListener("blur", () => setTimeout(closeDropdown, 150));
 }
 
-// Province filter with smooth zoom and count display
+// Province filter - Simplified and fixed
 if (provinceFilter) {
-  provinceFilter.addEventListener("change", async () => {
-    currentProvince = provinceFilter.value;
+  provinceFilter.addEventListener("change", () => {
+    const selectedProvince = provinceFilter.value;
+    console.log(`Province filter changed to: ${selectedProvince || "ALL"}`);
+    
+    // Reset search and pagination
     currentQuery = "";
     if (searchInput) searchInput.value = "";
     currentOffset = 0;
+    currentProvince = selectedProvince;
     closeDropdown();
     
-    // Show loading state
-    statusDiv.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Loading ${currentProvince || "all"} representatives...`;
-    
     // Fetch politicians for selected province
-    await fetchPoliticians("", currentProvince, 0);
-    
-    // After markers are added, the map will automatically zoom to fit them
-    // because updateMapMarkers calls map.fitBounds()
-    
-    // Update status with province info
-    if (currentProvince) {
-      const provinceName = provinceFilter.options[provinceFilter.selectedIndex]?.text || currentProvince;
-      statusDiv.innerHTML = `<i class="fas fa-map-marker-alt"></i> Showing representatives from ${provinceName}`;
-      setTimeout(() => {
-        if (statusDiv.innerHTML.includes(provinceName)) {
-          statusDiv.innerHTML = "";
-        }
-      }, 3000);
-    } else {
-      statusDiv.innerHTML = `<i class="fas fa-globe"></i> Showing all representatives across Canada`;
-      setTimeout(() => {
-        if (statusDiv.innerHTML.includes("all representatives")) {
-          statusDiv.innerHTML = "";
-        }
-      }, 3000);
-    }
+    fetchPoliticians("", selectedProvince, 0);
   });
 }
 

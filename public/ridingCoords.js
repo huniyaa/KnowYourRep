@@ -454,3 +454,31 @@ if (typeof window !== 'undefined') {
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = { ridingCoords, getRidingCoordinates, getMarkerColor, partyColors, provinceCenters };
 }
+
+// Make sure this function exists in your ridingCoords.js
+function getRidingCoordinates(districtName, provinceCode) {
+  // Try exact match
+  if (ridingCoords[districtName]) return ridingCoords[districtName];
+  
+  // Try case-insensitive match
+  const lowerName = districtName.toLowerCase();
+  for (const [key, coords] of Object.entries(ridingCoords)) {
+    if (key.toLowerCase() === lowerName) return coords;
+  }
+  
+  // Try partial match (remove common suffixes)
+  const simplified = districtName.split(/[—–-]/)[0].trim();
+  for (const [key, coords] of Object.entries(ridingCoords)) {
+    if (key.includes(simplified) || simplified.includes(key.split(/[—–-]/)[0])) {
+      return coords;
+    }
+  }
+  
+  // Fallback to province center
+  if (provinceCode && provinceCenters[provinceCode]) {
+    console.log(`Using province center for ${districtName}`);
+    return provinceCenters[provinceCode];
+  }
+  
+  return { lat: 56.130, lng: -106.346 };
+}
