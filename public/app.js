@@ -284,16 +284,40 @@ window.showPoliticianModal = (name, party, district, province) => {
   
   // Fetch quotes for this politician
   fetchQuotesForPolitician(name);
+
+  window.showPoliticianModal = (name, party, district, province) => {
+  const modalName = document.getElementById("modal-name");
+  const modalParty = document.getElementById("modal-party");
+  const modalDistrict = document.getElementById("modal-district");
+  const modalProvince = document.getElementById("modal-province");
+  const modalQuotes = document.getElementById("modal-quotes-text");
+  
+  if (modalName) modalName.textContent = name;
+  if (modalParty) modalParty.textContent = party;
+  if (modalDistrict) modalDistrict.textContent = district;
+  if (modalProvince) modalProvince.textContent = province;
+  if (modalQuotes) modalQuotes.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Loading statements...';
+  
+  if (modal) modal.style.display = 'flex';
+  
+  // Pass both name and riding for better search
+  fetchQuotesForPolitician(name, district);
+};
 };
 
-async function fetchQuotesForPolitician(name) {
+async function fetchQuotesForPolitician(name, riding = "") {
   const modalQuotes = document.getElementById("modal-quotes-text");
   if (!modalQuotes) return;
   
   modalQuotes.innerHTML = '<div class="loading-spinner"><i class="fas fa-spinner fa-spin"></i> Loading statements from Hansard...</div>';
   
   try {
-    const response = await fetch(`/api/quotes?politician=${encodeURIComponent(name)}&t=${Date.now()}`);
+    let url = `/api/quotes?politician=${encodeURIComponent(name)}&t=${Date.now()}`;
+    if (riding) {
+      url += `&riding=${encodeURIComponent(riding)}`;
+    }
+    
+    const response = await fetch(url);
     
     if (!response.ok) {
       throw new Error(`HTTP ${response.status}`);
@@ -306,7 +330,6 @@ async function fetchQuotesForPolitician(name) {
         let text = statement.text?.en || "";
         if (!text) return "";
         
-        // Truncate if too long
         if (text.length > 300) {
           text = text.substring(0, 300) + "...";
         }
@@ -340,7 +363,7 @@ async function fetchQuotesForPolitician(name) {
       modalQuotes.innerHTML = `
         <p><i class="fas fa-comment"></i> No recent statements found for ${escapeHtml(name)}.</p>
         <p style="font-size: 12px; color: #666; margin-top: 8px;">
-          Statements from House of Commons debates will appear here when available.
+          Try checking back later for updates from your representative.
         </p>
       `;
     }
@@ -348,10 +371,7 @@ async function fetchQuotesForPolitician(name) {
     console.error("Error fetching statements:", error);
     modalQuotes.innerHTML = `
       <p style="color: #c0392b;"><i class="fas fa-exclamation-circle"></i> Unable to load statements at this time.</p>
-      <p style="font-size: 12px; color: #666; margin-top: 8px;">
-        The Hansard service may be temporarily unavailable. Please try again later.
-      </p>
-      <button onclick="fetchQuotesForPolitician('${escapeHtml(name)}')" style="
+      <button onclick="fetchQuotesForPolitician('${escapeHtml(name)}', '${escapeHtml(riding)}')" style="
         background: #c0392b;
         color: white;
         border: none;
