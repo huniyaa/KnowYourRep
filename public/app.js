@@ -180,6 +180,34 @@ function updateMapMarkers(politicians) {
   if (fallbackUsed > 0) {
     console.log(`⚠️ ${fallbackUsed} markers using approximate (province center) coordinates`);
   }
+  // Add this at the end of updateMapMarkers function
+function updateProvinceStats(politicians) {
+  const statsDiv = document.getElementById('province-stats');
+  if (!statsDiv) return;
+  
+  const stats = {};
+  politicians.forEach(p => {
+    stats[p.province] = (stats[p.province] || 0) + 1;
+  });
+  
+  const sortedStats = Object.entries(stats).sort((a, b) => b[1] - a[1]);
+  
+  if (sortedStats.length > 0 && sortedStats.length < 13) { // Show only when filtering
+    statsDiv.style.display = 'block';
+    const statsHtml = `
+      <div class="stats-container">
+        ${sortedStats.map(([province, count]) => `
+          <div class="province-stat">
+            <strong>${count}</strong> MPs in ${province}
+          </div>
+        `).join('')}
+      </div>
+    `;
+    statsDiv.querySelector('.stats-container').innerHTML = statsHtml;
+  } else {
+    statsDiv.style.display = 'none';
+  }
+}
 }
 
 function initQuickFilters() {
