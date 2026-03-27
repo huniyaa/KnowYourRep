@@ -19,6 +19,7 @@ export default async function handler(req, res) {
       district: rep.current_riding?.name?.en ?? "Unknown",
       province: rep.current_riding?.province ?? "",
       image: rep.image ?? "",
+      slug: rep.url?.split('/').filter(Boolean).pop() ?? null,
     }));
     
     // filter by province if selected

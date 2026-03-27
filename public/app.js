@@ -46,40 +46,6 @@ function initMap() {
 }
 
 // ─── Main fetch function ──────────────────────────────────────────────────────
-async function fetchPoliticians(query = "", province = "", offset = 0) {
-  if (!statusDiv) return;
-  
-  statusDiv.innerHTML = '<div class="loading-spinner"><i class="fas fa-spinner fa-spin"></i> Loading...</div>';
-  if (resultsDiv) resultsDiv.innerHTML = "";
-  if (paginationDiv) paginationDiv.innerHTML = "";
-  
-  const params = new URLSearchParams({ limit: LIMIT, offset });
-  if (query) params.set("name", query);
-  if (province) params.set("province", province);
-  
-  try {
-    const res = await fetch(`/api/politicians?${params}`);
-    if (!res.ok) throw new Error(`Server error: ${res.status}`);
-    
-    const data = await res.json();
-    const politicians = data.politicians;
-    totalCount = data.count;
-    currentOffset = data.offset;
-    
-    
-    const from = offset + 1;
-    const to = Math.min(offset + LIMIT, totalCount);
-    statusDiv.innerHTML = `Found ${totalCount} result${totalCount !== 1 ? "s" : ""} — showing ${from}–${to}`;
-    
-    displayResults(politicians);
-    updateMapMarkers(politicians);
-    renderPagination();
-    
-  } catch (err) {
-    console.error(err);
-    statusDiv.innerHTML = `<p class="error">⚠️ ${err.message}</p>`;
-  }
-}
 
 async function fetchPoliticians(query = "", province = "", offset = 0) {
   if (!statusDiv) return;
@@ -277,42 +243,64 @@ function displayResults(politicians) {
 }
 // ─── Show politician modal (only when clicked) ─────────────────────────────────
 window.showPoliticianModal = (name, party, district, province) => {
+  const politician = currentPoliticians.find(p => p.name === name);
+  const imageUrl = politician?.image ? `https://api.openparliament.ca${politician.image}` : null;
+  const slug = politician?.slug; // <-- THIS IS WHERE const slug GOES
+
   const modalName = document.getElementById("modal-name");
   const modalParty = document.getElementById("modal-party");
   const modalDistrict = document.getElementById("modal-district");
   const modalProvince = document.getElementById("modal-province");
   const modalQuotes = document.getElementById("modal-quotes-text");
+  const learnMoreLink = document.getElementById("modal-learn-more");
   
   if (modalName) modalName.textContent = name;
   if (modalParty) modalParty.textContent = party;
   if (modalDistrict) modalDistrict.textContent = district;
   if (modalProvince) modalProvince.textContent = province;
   if (modalQuotes) modalQuotes.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Loading statements...';
+  
+  if (modal) modal.style.display = 'flex';
+
+   if (learnMoreLink) {
+    if (slug) {
+      learnMoreLink.href = `https://openparliament.ca/politicians/${slug}/`;
+    } else {
+      // Fallback: generate slug from name
+      const fallbackSlug = name.toLowerCase().replace(/\s+/g, '-');
+      learnMoreLink.href = `https://openparliament.ca/politicians/${fallbackSlug}/`;
+    }
+    learnMoreLink.style.display = 'inline-flex';
+  }
+  
+  // Add photo to modal header
+  const modalHeader = document.querySelector('.modal-header');
+  if (modalHeader) {
+    let existingPhoto = modalHeader.querySelector('.modal-photo');
+    if (!existingPhoto) {
+      const photoDiv = document.createElement('div');
+      photoDiv.className = 'modal-photo';
+      if (imageUrl) {
+        photoDiv.innerHTML = `<img src="${imageUrl}" alt="${escapeHtml(name)}" style="width: 60px; height: 60px; border-radius: 50%; object-fit: cover;">`;
+      } else {
+        photoDiv.innerHTML = `<div class="modal-initials" style="width: 60px; height: 60px; border-radius: 50%; background: #c0392b; color: white; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; font-weight: bold;">${getInitials(name)}</div>`;
+      }
+      modalHeader.insertBefore(photoDiv, modalHeader.firstChild);
+    } else {
+      if (imageUrl) {
+        existingPhoto.innerHTML = `<img src="${imageUrl}" alt="${escapeHtml(name)}" style="width: 60px; height: 60px; border-radius: 50%; object-fit: cover;">`;
+      } else {
+        existingPhoto.innerHTML = `<div class="modal-initials" style="width: 60px; height: 60px; border-radius: 50%; background: #c0392b; color: white; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; font-weight: bold;">${getInitials(name)}</div>`;
+      }
+    }
+  }
   
   if (modal) modal.style.display = 'flex';
   
   // Fetch quotes for this politician
   fetchQuotesForPolitician(name);
-
-  window.showPoliticianModal = (name, party, district, province) => {
-  const modalName = document.getElementById("modal-name");
-  const modalParty = document.getElementById("modal-party");
-  const modalDistrict = document.getElementById("modal-district");
-  const modalProvince = document.getElementById("modal-province");
-  const modalQuotes = document.getElementById("modal-quotes-text");
-  
-  if (modalName) modalName.textContent = name;
-  if (modalParty) modalParty.textContent = party;
-  if (modalDistrict) modalDistrict.textContent = district;
-  if (modalProvince) modalProvince.textContent = province;
-  if (modalQuotes) modalQuotes.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Loading statements...';
-  
-  if (modal) modal.style.display = 'flex';
-  
-  // Pass both name and riding for better search
-  fetchQuotesForPolitician(name, district);
 };
-};
+  
 
 async function fetchQuotesForPolitician(name) {
   const modalQuotes = document.getElementById("modal-quotes-text");

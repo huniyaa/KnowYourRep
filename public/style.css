@@ -951,3 +951,34 @@ blockquote footer {
   box-shadow: 0 8px 24px rgba(0,0,0,0.12);
   border-color: #c0392b;
 }
+
+/* Learn More Button */
+.modal-footer {
+  padding: 16px 20px 20px;
+  border-top: 1px solid #f0f0f0;
+  text-align: center;
+}
+
+.learn-more-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: #c0392b;
+  color: white;
+  padding: 10px 20px;
+  border-radius: 8px;
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.learn-more-btn:hover {
+  background: #a93226;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.learn-more-btn i {
+  font-size: 12px;
+}
