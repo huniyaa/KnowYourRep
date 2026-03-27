@@ -299,24 +299,44 @@ async function fetchQuotesForPolitician(name) {
     
     console.log(`Response status: ${response.status}`);
     
-    if (!response.ok) {
-      const errorData = await response.json();
-      console.error('Error response:', errorData);
-      throw new Error(errorData.error || `HTTP ${response.status}`);
+    // Even if status is 500, try to parse the response
+    let data;
+    try {
+      data = await response.json();
+    } catch (e) {
+      console.error('Failed to parse JSON:', e);
+      modalQuotes.innerHTML = `
+        <p style="color: #c0392b;">Unable to load statements at this time.</p>
+        <button onclick="fetchQuotesForPolitician('${escapeHtml(name)}')" style="
+          background: #c0392b;
+          color: white;
+          border: none;
+          padding: 6px 12px;
+          border-radius: 4px;
+          cursor: pointer;
+          margin-top: 8px;
+        ">
+          <i class="fas fa-sync-alt"></i> Retry
+        </button>
+      `;
+      return;
     }
-    
-    const data = await response.json();
-    console.log('Quotes data:', data);
     
     if (data.objects && data.objects.length > 0) {
       const quotesHtml = data.objects.map(statement => {
-        const text = statement.text?.en || statement.text || "No text available";
+        let text = "No text available";
+        if (statement.text) {
+          if (typeof statement.text === 'string') text = statement.text;
+          else if (statement.text.en) text = statement.text.en;
+          else if (statement.text.fr) text = statement.text.fr;
+        }
+        
         const date = statement.date ? new Date(statement.date).toLocaleDateString() : '';
         
         return `
-          <blockquote style="margin: 12px 0; padding: 8px 12px; background: #f9f9f9; border-left: 3px solid #c0392b;">
+          <blockquote style="margin: 12px 0; padding: 8px 12px; background: #f9f9f9; border-left: 3px solid #c0392b; border-radius: 6px;">
             "${escapeHtml(text)}"
-            ${date ? `<footer><small>${date}</small></footer>` : ''}
+            ${date ? `<footer style="margin-top: 8px; font-size: 11px; color: #999;">${date}</footer>` : ''}
           </blockquote>
         `;
       }).join('');
@@ -324,15 +344,27 @@ async function fetchQuotesForPolitician(name) {
       modalQuotes.innerHTML = quotesHtml;
     } else {
       modalQuotes.innerHTML = `
-        <p>No recent statements found for this politician.</p>
-        <small>Statements are from the House of Commons debates.</small>
+        <p>No recent statements found for ${escapeHtml(name)}.</p>
+        <p style="font-size: 12px; color: #666; margin-top: 8px;">
+          <i class="fas fa-info-circle"></i> Statements are from House of Commons debates.
+        </p>
+        <button onclick="fetchQuotesForPolitician('${escapeHtml(name)}')" style="
+          background: #c0392b;
+          color: white;
+          border: none;
+          padding: 6px 12px;
+          border-radius: 4px;
+          cursor: pointer;
+          margin-top: 8px;
+        ">
+          <i class="fas fa-sync-alt"></i> Try Again
+        </button>
       `;
     }
   } catch (error) {
     console.error("Error fetching statements:", error);
     modalQuotes.innerHTML = `
       <p style="color: #c0392b;">Unable to load statements at this time.</p>
-      <p><small>Error: ${error.message}</small></p>
       <button onclick="fetchQuotesForPolitician('${escapeHtml(name)}')" style="
         background: #c0392b;
         color: white;
