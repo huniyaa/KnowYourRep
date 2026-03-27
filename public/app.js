@@ -87,41 +87,54 @@ async function fetchPoliticians(query = "", province = "", offset = 0) {
 }
 
 // ─── Update map markers with fallback support ─────────────────────────────────
+// ─── Update map markers with party colors ─────────────────────────────────────
 function updateMapMarkers(politicians) {
   if (!markersLayer || !map) return;
   
   markersLayer.clearLayers();
   const bounds = [];
-  let markersAdded = 0;
-  let fallbackUsed = 0;
   
   politicians.forEach(politician => {
-    // Use the new getRidingCoordinates function
+    // Get coordinates
     let coords = window.getRidingCoordinates 
       ? window.getRidingCoordinates(politician.district, politician.province)
       : (window.ridingCoords && window.ridingCoords[politician.district]);
     
-    if (!coords) {
-      console.log(`No coordinates for: ${politician.district} (${politician.province})`);
-      return;
-    }
+    if (!coords) return;
     
-    if (!window.ridingCoords[politician.district]) {
-      fallbackUsed++;
-    }
-    markersAdded++;
+    // Get party color
+    const markerColor = window.getMarkerColor 
+      ? window.getMarkerColor(politician.party) 
+      : "#c0392b";
+    
+    // Create custom marker with party color
+    const customIcon = L.divIcon({
+      className: 'custom-marker',
+      html: `<div style="
+        background-color: ${markerColor};
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        border: 2px solid white;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        transition: transform 0.2s;
+      "></div>`,
+      iconSize: [24, 24],
+      popupAnchor: [0, -12]
+    });
     
     const popupContent = `
       <div class="map-popup" onclick="window.showPoliticianModal('${escapeHtml(politician.name)}', '${escapeHtml(politician.party)}', '${escapeHtml(politician.district)}', '${escapeHtml(politician.province)}')">
         <strong>${escapeHtml(politician.name)}</strong>
-        <div class="popup-party">${escapeHtml(politician.party)}</div>
+        <div class="popup-party" style="color: ${markerColor}; font-weight: bold;">
+          ${escapeHtml(politician.party)}
+        </div>
         <div class="popup-district">${escapeHtml(politician.district)}</div>
         <div class="popup-district">${escapeHtml(politician.province)}</div>
-        ${!window.ridingCoords[politician.district] ? '<div class="popup-district" style="color: orange;">📍 Approximate location</div>' : ''}
       </div>
     `;
     
-    const marker = L.marker([coords.lat, coords.lng])
+    const marker = L.marker([coords.lat, coords.lng], { icon: customIcon })
       .bindPopup(popupContent);
     
     markersLayer.addLayer(marker);
@@ -131,8 +144,6 @@ function updateMapMarkers(politicians) {
   if (bounds.length > 0 && map) {
     map.fitBounds(bounds, { padding: [40, 40] });
   }
-  
-  console.log(`Map updated: ${markersAdded} markers added, ${fallbackUsed} used fallback coordinates`);
 }
 
 // ─── Display results cards ────────────────────────────────────────────────────

@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Generate Riding Coordinates - Know Your Rep</title>
+    <style>
+        * { box-sizing: border-box; }
+        body { font-family: 'Segoe UI', sans-serif; background: #f0f4f8; margin: 0; padding: 20px; }
+        .container { max-width: 1400px; margin: 0 auto; background: white; padding: 24px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+        h1 { color: #c0392b; margin-top: 0; }
+        button { padding: 10px 20px; background: #c0392b; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 14px; margin-right: 10px; }
+        button:hover { background: #a93226; }
+        button:disabled { background: #ccc; cursor: not-allowed; }
+        .status { margin: 20px 0; padding: 12px; background: #e8f4f8; border-radius: 6px; font-family: monospace; }
+        .success { background: #d4edda; color: #155724; }
+        .error { background: #f8d7da; color: #721c24; }
+        .info { background: #e8f4f8; color: #0c5460; }
+        pre { background: #1e1e1e; color: #d4d4d4; padding: 16px; overflow-x: auto; border-radius: 8px; font-size: 12px; max-height: 500px; overflow-y: auto; }
+        table { width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 13px; }
+        th, td { padding: 8px; text-align: left; border-bottom: 1px solid #ddd; }
+        th { background: #f5f5f5; position: sticky; top: 0; }
+        input { padding: 6px; width: 100px; border: 1px solid #ddd; border-radius: 4px; font-family: monospace; }
+        .search-box { margin: 16px 0; }
+        .search-box input { width: 100%; max-width: 300px; padding: 8px; }
+        .coord-input { width: 90px; }
+        .update-btn { padding: 4px 12px; font-size: 12px; margin: 0; }
+        .party-color { display: inline-block; width: 12px; height: 12px; border-radius: 50%; margin-right: 6px; vertical-align: middle; }
+        .stats { display: flex; gap: 20px; margin: 16px 0; flex-wrap: wrap; }
+        .stat-card { background: #f8f9fa; padding: 12px 20px; border-radius: 8px; border-left: 3px solid #c0392b; }
+        .stat-number { font-size: 24px; font-weight: bold; color: #c0392b; }
+        .stat-label { font-size: 12px; color: #666; margin-top: 4px; }
+        .tabs { display: flex; gap: 10px; margin: 20px 0; border-bottom: 1px solid #ddd; }
+        .tab { padding: 8px 16px; cursor: pointer; background: none; border: none; color: #666; }
+        .tab.active { color: #c0392b; border-bottom: 2px solid #c0392b; border-radius: 0; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🗺️ Canadian Electoral Districts - Coordinate Generator</h1>
+        <p>This tool fetches all electoral districts from your API and helps you build a complete coordinates file.</p>
+        
+        <button id="fetchBtn">📡 Fetch All Districts from API</button>
+        <button id="downloadBtn" style="display:none;">💾 Download ridingCoords.js</button>
+        
+        <div id="status" class="status info">Click the button above to fetch districts from your API.</div>
+        
+        <div id="results" style="display:none;">
+            <div class="stats" id="stats"></div>
+            
+            <div class="tabs">
+                <button class="tab active" data-tab="missing">⚠️ Missing Coordinates</button>
+                <button class="tab" data-tab="all">📍 All Districts</button>
+                <button class="tab" data-tab="code">📋 Generated Code</button>
+            </div>
+            
+            <div id="missing-tab" class="tab-content active">
+                <div class="search-box">
+                    <input type="text" id="searchMissing" placeholder="Search missing districts..." />
+                </div>
+                <div id="missingTable"></div>
+            </div>
+            
+            <div id="all-tab" class="tab-content">
+                <div class="search-box">
+                    <input type="text" id="searchAll" placeholder="Search all districts..." />
+                </div>
+                <div id="allTable"></div>
+            </div>
+            
+            <div id="code-tab" class="tab-content">
+                <pre id="generatedCode"></pre>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const provinceCenters = {
+            "AB": { lat: 53.933, lng: -116.576, name: "Alberta" },
+            "BC": { lat: 53.726, lng: -127.647, name: "British Columbia" },
+            "MB": { lat: 55.000, lng: -97.000, name: "Manitoba" },
+            "NB": { lat: 46.500, lng: -66.500, name: "New Brunswick" },
+            "NL": { lat: 53.000, lng: -60.000, name: "Newfoundland and Labrador" },
+            "NS": { lat: 44.681, lng: -63.744, name: "Nova Scotia" },
+            "NT": { lat: 64.825, lng: -124.845, name: "Northwest Territories" },
+            "NU": { lat: 70.299, lng: -83.107, name: "Nunavut" },
+            "ON": { lat: 51.253, lng: -85.323, name: "Ontario" },
+            "PE": { lat: 46.500, lng: -63.500, name: "Prince Edward Island" },
+            "QC": { lat: 52.939, lng: -73.549, name: "Quebec" },
+            "SK": { lat: 54.000, lng: -106.000, name: "Saskatchewan" },
+            "YT": { lat: 63.626, lng: -135.168, name: "Yukon" }
+        };
+
+        const partyColors = {
+            "Liberal": "#d1001f",
+            "Conservative": "#1a4782",
+            "NDP": "#f48d2b",
+            "Green": "#3d9b35",
+            "Bloc Québécois": "#00b5e2",
+            "Independent": "#6c757d"
+        };
+
+        let allDistricts = [];
+        let existingCoords = {};
+        let manualCoords = {};
+
+        document.getElementById('fetchBtn').addEventListener('click', async () => {
+            const status = document.getElementById('status');
+            const fetchBtn = document.getElementById('fetchBtn');
+            
+            fetchBtn.disabled = true;
+            status.innerHTML = '<div class="info">📡 Fetching all politicians from OpenParliament API...</div>';
+            
+            try {
+                // Fetch all politicians
+                const response = await fetch('/api/politicians?limit=400');
+                if (!response.ok) throw new Error(`API error: ${response.status}`);
+                
+                const data = await response.json();
+                const politicians = data.politicians;
+                
+                // Get unique districts with their provinces and parties
+                const districtMap = new Map();
+                politicians.forEach(p => {
+                    if (!districtMap.has(p.district)) {
+                        districtMap.set(p.district, {
+                            name: p.district,
+                            province: p.province,
+                            parties: new Set([p.party]),
+                            count: 1
+                        });
+                    } else {
+                        const existing = districtMap.get(p.district);
+                        existing.parties.add(p.party);
+                        existing.count++;
+                    }
+                });
+                
+                allDistricts = Array.from(districtMap.values()).sort((a,b) => a.name.localeCompare(b.name));
+                
+                status.innerHTML += `<div class="success">✅ Found ${politicians.length} politicians across ${allDistricts.length} unique electoral districts</div>`;
+                
+                // Try to load existing coordinates if any
+                if (window.ridingCoords) {
+                    existingCoords = window.ridingCoords;
+                    status.innerHTML += `<div class="info">📦 Loaded ${Object.keys(existingCoords).length} existing coordinates</div>`;
+                }
+                
+                const exactMatches = allDistricts.filter(d => existingCoords[d.name]);
+                const missingDistricts = allDistricts.filter(d => !existingCoords[d.name]);
+                
+                status.innerHTML += `<div class="${missingDistricts.length === 0 ? 'success' : 'error'}">
+                    ${exactMatches.length} districts have exact coordinates, ${missingDistricts.length} need coordinates
+                </div>`;
+                
+                // Show stats
+                showStats(allDistricts, exactMatches.length, missingDistricts.length);
+                
+                // Display tables
+                displayMissingTable(missingDistricts);
+                displayAllTable(allDistricts);
+                
+                // Generate code
+                generateCode(allDistricts, existingCoords, manualCoords);
+                
+                document.getElementById('results').style.display = 'block';
+                document.getElementById('downloadBtn').style.display = 'inline-block';
+                
+            } catch (error) {
+                status.innerHTML += `<div class="error">❌ Error: ${error.message}</div>`;
+                console.error(error);
+            } finally {
+                fetchBtn.disabled = false;
+            }
+        });
+        
+        function showStats(allDistricts, exactCount, missingCount) {
+            const statsHtml = `
+                <div class="stat-card">
+                    <div class="stat-number">${allDistricts.length}</div>
+                    <div class="stat-label">Total Districts</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">${exactCount}</div>
+                    <div class="stat-label">Exact Coordinates</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">${missingCount}</div>
+                    <div class="stat-label">Need Coordinates</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">${allDistricts.reduce((sum, d) => sum + d.count, 0)}</div>
+                    <div class="stat-label">Total MPs</div>
+                </div>
+            `;
+            document.getElementById('stats').innerHTML = statsHtml;
+        }
+        
+        function displayMissingTable(missingDistricts) {
+            const container = document.getElementById('missingTable');
+            if (missingDistricts.length === 0) {
+                container.innerHTML = '<div class="success">🎉 All districts have coordinates! Your map will show exact locations for everyone.</div>';
+                return;
+            }
+            
+            let html = `<table><thead><tr>
+                <th>District Name</th>
+                <th>Province</th>
+                <th>MPs</th>
+                <th>Parties</th>
+                <th>Latitude</th>
+                <th>Longitude</th>
+                <th>Action</th>
+            </tr></thead><tbody>`;
+            
+            missingDistricts.forEach(district => {
+                const provinceCenter = provinceCenters[district.province];
+                const suggestedLat = provinceCenter ? provinceCenter.lat : 56.130;
+                const suggestedLng = provinceCenter ? provinceCenter.lng : -106.346;
+                const manual = manualCoords[district.name];
+                const partiesList = Array.from(district.parties).join(', ');
+                
+                html += `
+                    <tr>
+                        <td><strong>${escapeHtml(district.name)}</strong></td>
+                        <td>${district.province}</td>
+                        <td>${district.count}</td>
+                        <td>${partiesList}</td>
+                        <td><input type="text" class="lat-input" data-district="${escapeHtml(district.name)}" value="${manual ? manual.lat : suggestedLat}" style="width:90px;"></td>
+                        <td><input type="text" class="lng-input" data-district="${escapeHtml(district.name)}" value="${manual ? manual.lng : suggestedLng}" style="width:90px;"></td>
+                        <td><button class="update-coord" data-district="${escapeHtml(district.name)}">Save</button></td>
+                    </tr>
+                `;
+            });
+            
+            html += '</tbody></table>';
+            container.innerHTML = html;
+            
+            // Add event listeners
+            document.querySelectorAll('.update-coord').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const district = btn.dataset.district;
+                    const latInput = document.querySelector(`.lat-input[data-district="${district}"]`);
+                    const lngInput = document.querySelector(`.lng-input[data-district="${district}"]`);
+                    
+                    const lat = parseFloat(latInput.value);
+                    const lng = parseFloat(lngInput.value);
+                    
+                    if (!isNaN(lat) && !isNaN(lng)) {
+                        manualCoords[district] = { lat, lng };
+                        generateCode(allDistricts, existingCoords, manualCoords);
+                        btn.textContent = '✓ Saved';
+                        btn.style.background = 'green';
+                        setTimeout(() => {
+                            btn.textContent = 'Save';
+                            btn.style.background = '';
+                        }, 1500);
+                    }
+                });
+            });
+            
+            // Search functionality
+            document.getElementById('searchMissing').addEventListener('input', (e) => {
+                const searchTerm = e.target.value.toLowerCase();
+                const rows = container.querySelectorAll('tbody tr');
+                rows.forEach(row => {
+                    const districtName = row.querySelector('td:first-child').textContent.toLowerCase();
+                    row.style.display = districtName.includes(searchTerm) ? '' : 'none';
+                });
+            });
+        }
+        
+        function displayAllTable(allDistricts) {
+            const container = document.getElementById('allTable');
+            let html = `<table><thead><tr>
+                <th>District Name</th>
+                <th>Province</th>
+                <th>MPs</th>
+                <th>Parties</th>
+                <th>Coordinates Status</th>
+            </tr></thead><tbody>`;
+            
+            allDistricts.forEach(district => {
+                const hasExact = existingCoords[district.name];
+                const manual = manualCoords[district.name];
+                const hasCoord = hasExact || manual;
+                const partiesList = Array.from(district.parties).join(', ');
+                
+                html += `
+                    <tr>
+                        <td>${escapeHtml(district.name)}</td>
+                        <td>${district.province}</td>
+                        <td>${district.count}</td>
+                        <td>${partiesList}</td>
+                        <td>${hasCoord ? '✅ Has coordinates' : '⚠️ Needs coordinates'}</td>
+                    </tr>
+                `;
+            });
+            
+            html += '</tbody></table>';
+            container.innerHTML = html;
+            
+            document.getElementById('searchAll').addEventListener('input', (e) => {
+                const searchTerm = e.target.value.toLowerCase();
+                const rows = container.querySelectorAll('#allTable tbody tr');
+                rows.forEach(row => {
+                    const districtName = row.querySelector('td:first-child').textContent.toLowerCase();
+                    row.style.display = districtName.includes(searchTerm) ? '' : 'none';
+                });
+            });
+        }
+        
+        function generateCode(allDistricts, existingCoords, manualCoords) {
+            const allCoords = { ...existingCoords, ...manualCoords };
+            
+            let code = `// Complete Canadian Electoral District Coordinates\n`;
+            code += `// Generated on ${new Date().toLocaleString()}\n`;
+            code += `// Total districts: ${allDistricts.length}\n`;
+            code += `// Districts with coordinates: ${Object.keys(allCoords).length}\n\n`;
+            code += `const ridingCoords = {\n`;
+            
+            allDistricts.forEach(district => {
+                const coord = allCoords[district.name];
+                if (coord) {
+                    code += `  "${district.name}": { lat: ${coord.lat.toFixed(6)}, lng: ${coord.lng.toFixed(6)} },\n`;
+                } else {
+                    const provinceCenter = provinceCenters[district.province];
+                    if (provinceCenter) {
+                        code += `  "${district.name}": { lat: ${provinceCenter.lat}, lng: ${provinceCenter.lng} }, // TODO: Get exact coordinates for ${district.name}\n`;
+                    } else {
+                        code += `  "${district.name}": { lat: 56.130, lng: -106.346 }, // TODO: Update with exact coordinates\n`;
+                    }
+                }
+            });
+            
+            code += `};\n\n`;
+            code += `// Party colors for markers\n`;
+            code += `const partyColors = ${JSON.stringify(partyColors, null, 2)};\n\n`;
+            code += `// Province centers for fallback\n`;
+            code += `const provinceCenters = ${JSON.stringify(provinceCenters, null, 2)};\n\n`;
+            code += `// Get coordinates with fallback\n`;
+            code += `function getRidingCoordinates(districtName, provinceCode) {\n`;
+            code += `  if (ridingCoords[districtName]) return ridingCoords[districtName];\n`;
+            code += `  if (provinceCode && provinceCenters[provinceCode]) return provinceCenters[provinceCode];\n`;
+            code += `  return { lat: 56.130, lng: -106.346 };\n`;
+            code += `}\n\n`;
+            code += `// Get marker color by party\n`;
+            code += `function getMarkerColor(party) {\n`;
+            code += `  if (party?.includes("Liberal")) return partyColors.Liberal;\n`;
+            code += `  if (party?.includes("Conservative")) return partyColors.Conservative;\n`;
+            code += `  if (party?.includes("NDP") || party?.includes("New Democratic")) return partyColors.NDP;\n`;
+            code += `  if (party?.includes("Green")) return partyColors.Green;\n`;
+            code += `  if (party?.includes("Bloc")) return partyColors["Bloc Québécois"];\n`;
+            code += `  return "#c0392b";\n`;
+            code += `}\n\n`;
+            code += `// Make globally available\n`;
+            code += `if (typeof window !== 'undefined') {\n`;
+            code += `  window.ridingCoords = ridingCoords;\n`;
+            code += `  window.getRidingCoordinates = getRidingCoordinates;\n`;
+            code += `  window.getMarkerColor = getMarkerColor;\n`;
+            code += `  window.partyColors = partyColors;\n`;
+            code += `}\n\n`;
+            code += `// Export for Node.js\n`;
+            code += `if (typeof module !== 'undefined' && module.exports) {\n`;
+            code += `  module.exports = { ridingCoords, getRidingCoordinates, getMarkerColor, partyColors, provinceCenters };\n`;
+            code += `}\n`;
+            
+            document.getElementById('generatedCode').textContent = code;
+        }
+        
+        document.getElementById('downloadBtn')?.addEventListener('click', () => {
+            const code = document.getElementById('generatedCode').textContent;
+            const blob = new Blob([code], { type: 'text/javascript' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'ridingCoords.js';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        });
+        
+        // Tab switching
+        document.querySelectorAll('.tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                const tabName = tab.dataset.tab;
+                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                tab.classList.add('active');
+                document.getElementById(`${tabName}-tab`).classList.add('active');
+            });
+        });
+        
+        function escapeHtml(str) {
+            if (!str) return '';
+            return str.replace(/[&<>]/g, function(m) {
+                if (m === '&') return '&amp;';
+                if (m === '<') return '&lt;';
+                if (m === '>') return '&gt;';
+                return m;
+            });
+        }
+    </script>
+</body>
+</html>
