@@ -95,6 +95,16 @@ function initMap() {
   markersLayer = L.layerGroup().addTo(newMap);
   
   return newMap;
+  
+}
+// Add clear button handler
+const clearBtn = document.getElementById('clear-results-btn');
+if (clearBtn) {
+  clearBtn.addEventListener('click', () => {
+    clearResults();
+    // Optionally reset map view
+    if (map) map.setView([56.1304, -106.3468], 4);
+  });
 }
 
 // ─── Main fetch function ──────────────────────────────────────────────────────
@@ -103,8 +113,6 @@ async function fetchPoliticians(query = "", province = "", offset = 0) {
   if (!statusDiv) return;
   
   statusDiv.innerHTML = '<div class="loading-spinner"><i class="fas fa-spinner fa-spin"></i> Loading...</div>';
-  if (resultsDiv) resultsDiv.innerHTML = "";
-  if (paginationDiv) paginationDiv.innerHTML = "";
   
   const params = new URLSearchParams({ limit: LIMIT, offset });
   if (query) params.set("name", query);
@@ -119,12 +127,9 @@ async function fetchPoliticians(query = "", province = "", offset = 0) {
     totalCount = data.count;
     currentOffset = data.offset;
     
-    // DEBUG: Log what we got
-    console.log(`Fetched ${politicians.length} politicians for province: ${province || "ALL"}`);
-    console.log("Politicians:", politicians.map(p => ({ name: p.name, district: p.district, province: p.province })));
-    
     if (!politicians.length) {
       statusDiv.innerHTML = '<p class="empty">No politicians found. Try adjusting your search.</p>';
+      showResultsInPanel([], true);
       if (markersLayer) markersLayer.clearLayers();
       return;
     }
@@ -133,7 +138,8 @@ async function fetchPoliticians(query = "", province = "", offset = 0) {
     const to = Math.min(offset + LIMIT, totalCount);
     statusDiv.innerHTML = `Found ${totalCount} result${totalCount !== 1 ? "s" : ""} — showing ${from}–${to}`;
     
-    displayResults(politicians);
+    // Show results in side panel (not full page)
+    showResultsInPanel(politicians, true);
     updateMapMarkers(politicians);
     renderPagination();
     
@@ -141,7 +147,6 @@ async function fetchPoliticians(query = "", province = "", offset = 0) {
     console.error(err);
     statusDiv.innerHTML = `<p class="error">⚠️ ${err.message}</p>`;
   }
-  
 }
 
 // ─── Update map markers with colored classic markers ─────────────────────────
@@ -296,6 +301,102 @@ function displayResults(politicians) {
       </div>
     `;
   }).join('');
+
+  function showResultsInPanel(politicians, isSearchResult = false) {
+  const resultsList = document.getElementById('results');
+  const panelEmpty = document.getElementById('panel-empty');
+  const statusMsg = document.getElementById('status');
+  const showAllBtn = document.getElementById('show-all-btn');
+  const clearBtn = document.getElementById('clear-btn');
+  
+  if (!resultsList) return;
+  
+  if (!politicians || politicians.length === 0) {
+    resultsList.innerHTML = '';
+    panelEmpty.style.display = 'block';
+    if (statusMsg) statusMsg.style.display = 'none';
+    if (showAllBtn) showAllBtn.style.display = 'none';
+    if (clearBtn) clearBtn.style.display = 'none';
+    return;
+  }
+  
+  panelEmpty.style.display = 'none';
+  if (statusMsg) statusMsg.style.display = 'block';
+  
+  // Show clear button if this is a search result
+  if (isSearchResult && clearBtn) {
+    clearBtn.style.display = 'inline-block';
+  }
+  
+  // Render the politicians
+  resultsList.innerHTML = politicians.map(rep => {
+    const imageUrl = rep.image ? `https://api.openparliament.ca${rep.image}` : null;
+    
+    let partyColor = "#e67e22";
+    if (rep.party) {
+      if (rep.party.includes("Liberal")) partyColor = "#c0392b";
+      else if (rep.party.includes("Conservative")) partyColor = "#1a4782";
+      else if (rep.party.includes("NDP")) partyColor = "#e67e22";
+      else if (rep.party.includes("Green")) partyColor = "#2ecc71";
+      else if (rep.party.includes("Bloc")) partyColor = "#3498db";
+    }
+    
+    return `
+      <div class="card" data-name="${escapeHtml(rep.name)}" data-party="${escapeHtml(rep.party)}" data-district="${escapeHtml(rep.district)}" data-province="${escapeHtml(rep.province)}" data-image="${imageUrl || ''}">
+        <div class="avatar">
+          ${imageUrl ? 
+            `<img src="${imageUrl}" alt="${escapeHtml(rep.name)}" class="mp-photo" onerror="this.onerror=null; this.parentElement.innerHTML='${getInitials(rep.name)}';">` : 
+            getInitials(rep.name)
+          }
+        </div>
+        <div class="info">
+          <h3>${escapeHtml(rep.name)}</h3>
+          <p class="party" style="color: ${partyColor};">${escapeHtml(rep.party)}</p>
+          <p class="district">${escapeHtml(rep.district)}${rep.province ? `, ${rep.province}` : ""}</p>
+        </div>
+      </div>
+    `;
+  }).join('');
+  
+  // Add click handlers to cards
+  document.querySelectorAll('.results-list .card').forEach(card => {
+    card.addEventListener('click', () => {
+      const name = card.dataset.name;
+      const party = card.dataset.party;
+      const district = card.dataset.district;
+      const province = card.dataset.province;
+      const imageUrl = card.dataset.image;
+      
+      const politician = {
+        name, party, district, province,
+        image: imageUrl ? imageUrl.replace('https://api.openparliament.ca', '') : null
+      };
+      
+      showPoliticianModalWithData(politician);
+    });
+  });
+}
+
+// Clear results
+function clearResults() {
+  const resultsList = document.getElementById('results');
+  const panelEmpty = document.getElementById('panel-empty');
+  const clearBtn = document.getElementById('clear-btn');
+  const showAllBtn = document.getElementById('show-all-btn');
+  const statusMsg = document.getElementById('status');
+  
+  if (resultsList) resultsList.innerHTML = '';
+  if (panelEmpty) panelEmpty.style.display = 'block';
+  if (clearBtn) clearBtn.style.display = 'none';
+  if (showAllBtn) showAllBtn.style.display = 'none';
+  if (statusMsg) statusMsg.style.display = 'none';
+  
+  // Clear search input
+  if (searchInput) searchInput.value = '';
+  currentQuery = '';
+  currentProvince = '';
+  if (provinceFilter) provinceFilter.value = '';
+}
   
   // Add click handlers to cards
   document.querySelectorAll('.card').forEach(card => {
