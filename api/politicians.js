@@ -19,6 +19,8 @@ export default async function handler(req, res) {
       district: rep.current_riding?.name?.en ?? "Unknown",
       province: rep.current_riding?.province ?? "",
       image: rep.image ?? "",
+      image: rep.image ?? null,  // Make sure this is included
+      slug: rep.url?.split('/').filter(Boolean).pop() ?? null,  // Add this line
       slug: rep.url?.split('/').filter(Boolean).pop() ?? null,
     }));
     
