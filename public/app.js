@@ -87,7 +87,7 @@ async function fetchPoliticians(query = "", province = "", offset = 0) {
 }
 
 // ─── Update map markers with fallback support ─────────────────────────────────
-// ─── Update map markers with party colors ─────────────────────────────────────
+// ─── Update map markers with party colors and province zoom ─────────────────
 function updateMapMarkers(politicians) {
   if (!markersLayer || !map) return;
   
@@ -95,6 +95,7 @@ function updateMapMarkers(politicians) {
   const bounds = [];
   let markersAdded = 0;
   let fallbackUsed = 0;
+  const provinceMarkers = {};
   
   politicians.forEach(politician => {
     // Get coordinates using the new function
@@ -106,6 +107,12 @@ function updateMapMarkers(politicians) {
       console.log(`No coordinates for: ${politician.district}`);
       return;
     }
+    
+    // Track markers by province for debugging
+    if (!provinceMarkers[politician.province]) {
+      provinceMarkers[politician.province] = 0;
+    }
+    provinceMarkers[politician.province]++;
     
     // Track if we're using a fallback (province center)
     if (!window.ridingCoords[politician.district]) {
@@ -154,11 +161,54 @@ function updateMapMarkers(politicians) {
     bounds.push([coords.lat, coords.lng]);
   });
   
+  // Smooth zoom to fit all markers with animation
   if (bounds.length > 0 && map) {
-    map.fitBounds(bounds, { padding: [40, 40] });
+    // Add a small delay to ensure markers are added
+    setTimeout(() => {
+      map.fitBounds(bounds, { 
+        padding: [50, 50],
+        maxZoom: 12, // Don't zoom in too close on province view
+        animate: true,
+        duration: 0.5
+      });
+    }, 100);
   }
   
-  console.log(`Map updated: ${markersAdded} markers added, ${fallbackUsed} using approximate locations`);
+  // Log marker counts by province
+  console.log(`Map updated: ${markersAdded} markers added`);
+  console.log('Markers by province:', provinceMarkers);
+  if (fallbackUsed > 0) {
+    console.log(`⚠️ ${fallbackUsed} markers using approximate (province center) coordinates`);
+  }
+}
+
+function initQuickFilters() {
+  const quickFilters = document.querySelectorAll('.quick-filter');
+  
+  quickFilters.forEach(btn => {
+    btn.addEventListener('click', () => {
+      const province = btn.dataset.province;
+      
+      // Update active state
+      quickFilters.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      
+      // Update province filter dropdown
+      if (provinceFilter) {
+        provinceFilter.value = province;
+        // Trigger change event
+        const event = new Event('change');
+        provinceFilter.dispatchEvent(event);
+      }
+    });
+  });
+}
+
+// Call this after DOM is loaded
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initQuickFilters);
+} else {
+  initQuickFilters();
 }
 
 // ─── Display results cards ────────────────────────────────────────────────────
@@ -433,15 +483,41 @@ if (searchInput) {
   searchInput.addEventListener("blur", () => setTimeout(closeDropdown, 150));
 }
 
-// Province filter
+// Province filter with smooth zoom and count display
 if (provinceFilter) {
-  provinceFilter.addEventListener("change", () => {
+  provinceFilter.addEventListener("change", async () => {
     currentProvince = provinceFilter.value;
     currentQuery = "";
     if (searchInput) searchInput.value = "";
     currentOffset = 0;
     closeDropdown();
-    fetchPoliticians("", currentProvince, 0);
+    
+    // Show loading state
+    statusDiv.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Loading ${currentProvince || "all"} representatives...`;
+    
+    // Fetch politicians for selected province
+    await fetchPoliticians("", currentProvince, 0);
+    
+    // After markers are added, the map will automatically zoom to fit them
+    // because updateMapMarkers calls map.fitBounds()
+    
+    // Update status with province info
+    if (currentProvince) {
+      const provinceName = provinceFilter.options[provinceFilter.selectedIndex]?.text || currentProvince;
+      statusDiv.innerHTML = `<i class="fas fa-map-marker-alt"></i> Showing representatives from ${provinceName}`;
+      setTimeout(() => {
+        if (statusDiv.innerHTML.includes(provinceName)) {
+          statusDiv.innerHTML = "";
+        }
+      }, 3000);
+    } else {
+      statusDiv.innerHTML = `<i class="fas fa-globe"></i> Showing all representatives across Canada`;
+      setTimeout(() => {
+        if (statusDiv.innerHTML.includes("all representatives")) {
+          statusDiv.innerHTML = "";
+        }
+      }, 3000);
+    }
   });
 }
 

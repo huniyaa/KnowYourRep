@@ -683,3 +683,34 @@ blockquote footer {
   color: #666;
   margin: 2px 0;
 }
+
+/* Province Quick Filters */
+.province-quick-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+  justify-content: center;
+}
+
+.quick-filter {
+  padding: 6px 12px;
+  background: #f0f0f0;
+  border: 1px solid #ddd;
+  border-radius: 20px;
+  cursor: pointer;
+  font-size: 12px;
+  transition: all 0.2s;
+}
+
+.quick-filter:hover {
+  background: #c0392b;
+  color: white;
+  border-color: #c0392b;
+}
+
+.quick-filter.active {
+  background: #c0392b;
+  color: white;
+  border-color: #c0392b;
+}
