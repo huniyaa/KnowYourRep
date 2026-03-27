@@ -134,6 +134,7 @@ async function fetchPoliticians(query = "", province = "", offset = 0) {
 
 // ─── Update map markers with party colors ─────────────────────────────────────
 // ─── Update map markers with party-colored pins ─────────────────────────────────────
+// ─── Update map markers with party-colored default markers ───────────────────
 function updateMapMarkers(politicians) {
   if (!markersLayer || !map) return;
   
@@ -153,39 +154,21 @@ function updateMapMarkers(politicians) {
     // Get party color
     let markerColor = window.getMarkerColor ? window.getMarkerColor(politician.party) : "#c0392b";
     
-    // Create custom pin icon using Leaflet's default icon with custom color
-    // We'll use a custom marker that looks like a pin/teardrop
+    // Create custom marker using Leaflet's default marker with custom color
+    // We need to create an SVG path for the default marker shape with custom color
+    const pinSvg = `
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 36" width="24" height="36">
+        <path fill="${markerColor}" stroke="white" stroke-width="1.5" d="M12,0 C7.6,0 4,3.6 4,8 C4,14 12,24 12,24 C12,24 20,14 20,8 C20,3.6 16.4,0 12,0 Z M12,11 C10.3,11 9,9.7 9,8 C9,6.3 10.3,5 12,5 C13.7,5 15,6.3 15,8 C15,9.7 13.7,11 12,11 Z"/>
+        <circle fill="white" cx="12" cy="8" r="2.5"/>
+      </svg>
+    `;
+    
     const pinIcon = L.divIcon({
-      className: 'custom-pin',
-      html: `<div style="
-        position: relative;
-        width: 0;
-        height: 0;
-      ">
-        <div style="
-          position: absolute;
-          left: -12px;
-          top: -30px;
-          width: 0;
-          height: 0;
-          border-left: 12px solid transparent;
-          border-right: 12px solid transparent;
-          border-bottom: 24px solid ${markerColor};
-          filter: drop-shadow(0 2px 2px rgba(0,0,0,0.3));
-        "></div>
-        <div style="
-          position: absolute;
-          left: -4px;
-          top: -24px;
-          width: 8px;
-          height: 8px;
-          background: white;
-          border-radius: 50%;
-          z-index: 2;
-        "></div>
-      </div>`,
-      iconSize: [24, 30],
-      popupAnchor: [0, -24]
+      className: 'custom-default-pin',
+      html: pinSvg,
+      iconSize: [24, 36],
+      popupAnchor: [0, -18],
+      iconAnchor: [12, 36]
     });
     
     const popupContent = `

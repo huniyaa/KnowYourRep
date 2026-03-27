@@ -800,22 +800,6 @@ blockquote footer {
   position: relative;
 }
 
-/* Custom Pin Marker Styles */
-.custom-pin {
-  background: transparent;
-  border: none;
-  cursor: pointer;
-}
-
-.custom-pin div {
-  transition: transform 0.2s ease;
-}
-
-.custom-pin:hover div:first-child {
-  transform: scale(1.1);
-  transition: transform 0.2s ease;
-}
-
 /* Map popup styles */
 .map-popup {
   cursor: pointer;
@@ -845,4 +829,21 @@ blockquote footer {
 .leaflet-popup-content {
   margin: 12px;
   min-width: 180px;
+}
+
+/* Custom default pin styles */
+.custom-default-pin {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+}
+
+.custom-default-pin svg {
+  transition: transform 0.2s ease;
+  filter: drop-shadow(0 2px 2px rgba(0,0,0,0.2));
+}
+
+.custom-default-pin:hover svg {
+  transform: scale(1.1);
+  transition: transform 0.2s ease;
 }
