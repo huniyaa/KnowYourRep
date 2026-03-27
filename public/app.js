@@ -295,16 +295,15 @@ async function fetchQuotesForPolitician(name) {
   
   try {
     console.log(`Fetching quotes for: ${name}`);
-    const response = await fetch(`/api/quotes?politician=${encodeURIComponent(name)}`);
     
-    let data;
-    try {
-      data = await response.json();
-    } catch (e) {
-      console.error('Failed to parse JSON:', e);
-      // Fallback to default quotes if JSON parse fails
-      data = { objects: getDefaultQuotes(name) };
+    // Add a cache-buster to prevent caching
+    const response = await fetch(`/api/quotes?politician=${encodeURIComponent(name)}&t=${Date.now()}`);
+    
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}`);
     }
+    
+    const data = await response.json();
     
     if (data.objects && data.objects.length > 0) {
       const quotesHtml = data.objects.map(statement => {
@@ -312,16 +311,19 @@ async function fetchQuotesForPolitician(name) {
         if (statement.text) {
           if (typeof statement.text === 'string') text = statement.text;
           else if (statement.text.en) text = statement.text.en;
-          else if (statement.text.fr) text = statement.text.fr;
         }
         
-        const date = statement.date ? new Date(statement.date).toLocaleDateString() : '';
+        const date = statement.date ? new Date(statement.date).toLocaleDateString('en-CA', {
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric'
+        }) : '';
         
         return `
-          <blockquote style="margin: 12px 0; padding: 12px 16px; background: #f9f9f9; border-left: 4px solid #c0392b; border-radius: 8px;">
+          <blockquote style="margin: 12px 0; padding: 16px; background: #f9f9f9; border-left: 4px solid #c0392b; border-radius: 8px;">
             <i class="fas fa-quote-left" style="color: #c0392b; margin-right: 8px; opacity: 0.5;"></i>
             "${escapeHtml(text)}"
-            ${date ? `<footer style="margin-top: 8px; font-size: 11px; color: #999;">${date}</footer>` : ''}
+            ${date ? `<footer style="margin-top: 12px; font-size: 11px; color: #999;">${date}</footer>` : ''}
           </blockquote>
         `;
       }).join('');
@@ -337,20 +339,23 @@ async function fetchQuotesForPolitician(name) {
     }
   } catch (error) {
     console.error("Error fetching statements:", error);
-    // Show default quotes on error
-    const defaultQuotes = getDefaultQuotes(name);
-    const quotesHtml = defaultQuotes.map(quote => `
-      <blockquote style="margin: 12px 0; padding: 12px 16px; background: #f9f9f9; border-left: 4px solid #c0392b; border-radius: 8px;">
-        <i class="fas fa-quote-left" style="color: #c0392b; margin-right: 8px; opacity: 0.5;"></i>
-        "${escapeHtml(quote.text.en)}"
-        <footer style="margin-top: 8px; font-size: 11px; color: #999;">${new Date(quote.date).toLocaleDateString()}</footer>
-      </blockquote>
-    `).join('');
-    
-    modalQuotes.innerHTML = quotesHtml;
+    modalQuotes.innerHTML = `
+      <p style="color: #c0392b;"><i class="fas fa-exclamation-circle"></i> Unable to load statements at this time.</p>
+      <button onclick="fetchQuotesForPolitician('${escapeHtml(name)}')" style="
+        background: #c0392b;
+        color: white;
+        border: none;
+        padding: 8px 16px;
+        border-radius: 6px;
+        cursor: pointer;
+        margin-top: 12px;
+        font-size: 12px;
+      ">
+        <i class="fas fa-sync-alt"></i> Retry
+      </button>
+    `;
   }
 }
-
 function getDefaultQuotes(name) {
   return [
     {
