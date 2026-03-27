@@ -38,7 +38,7 @@ export default async function handler(req, res) {
     console.log(`Found: ${politicianObj.name}, slug: ${slug}`);
     
     // Fetch speeches using the correct endpoint
-    const speechesUrl = `https://api.openparliament.ca/speeches/?format=json&limit=5&politician=${slug}`;
+    const speechesUrl = `https://api.openparliament.ca/speeches/?format=json&limit=1&politician=${slug}`;
     const speechesResponse = await fetch(speechesUrl);
     
     if (!speechesResponse.ok) {
