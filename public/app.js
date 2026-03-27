@@ -140,13 +140,13 @@ function updateMapMarkers(politicians) {
   let fallbackUsed = 0;
   
   politicians.forEach(politician => {
-    // Get coordinates
+    // This will now use your complete coordinates file
     let coords = window.getRidingCoordinates 
       ? window.getRidingCoordinates(politician.district, politician.province)
       : (window.ridingCoords && window.ridingCoords[politician.district]);
     
     if (!coords) {
-      console.log(`No coordinates for: ${politician.district} (${politician.province})`);
+      console.log(`No coordinates for: ${politician.district}`);
       return;
     }
     
@@ -156,18 +156,16 @@ function updateMapMarkers(politicians) {
     markersAdded++;
     
     // Get party color
-    let markerColor = "#c0392b"; // Default red
+    let markerColor = "#c0392b";
     if (politician.party) {
       if (politician.party.includes("Liberal")) markerColor = "#d1001f";
       else if (politician.party.includes("Conservative")) markerColor = "#1a4782";
-      else if (politician.party.includes("NDP") || politician.party.includes("New Democratic")) markerColor = "#f48d2b";
+      else if (politician.party.includes("NDP")) markerColor = "#f48d2b";
       else if (politician.party.includes("Green")) markerColor = "#3d9b35";
       else if (politician.party.includes("Bloc")) markerColor = "#00b5e2";
-      else if (politician.party.includes("Independent")) markerColor = "#6c757d";
     }
     
-    // Create a colored marker using Leaflet's default marker with custom color
-    // We'll use a colored circle inside a standard marker shape
+    // Create colored pin marker
     const coloredIcon = L.divIcon({
       className: 'colored-marker',
       html: `<div style="position: relative; width: 25px; height: 41px;">
@@ -207,7 +205,7 @@ function updateMapMarkers(politicians) {
     map.fitBounds(bounds, { padding: [40, 40] });
   }
   
-  console.log(`Map updated: ${markersAdded} markers added, ${fallbackUsed} used fallback coordinates`);
+  console.log(`Map updated: ${markersAdded} markers added, ${fallbackUsed} using fallback coordinates`);
 }
 
 function initQuickFilters() {
