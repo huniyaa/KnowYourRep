@@ -290,13 +290,9 @@ async function fetchQuotesForPolitician(name) {
   const modalQuotes = document.getElementById("modal-quotes-text");
   if (!modalQuotes) return;
   
-  // Show loading state
-  modalQuotes.innerHTML = '<div class="loading-spinner"><i class="fas fa-spinner fa-spin"></i> Loading statements...</div>';
+  modalQuotes.innerHTML = '<div class="loading-spinner"><i class="fas fa-spinner fa-spin"></i> Loading statements from Hansard...</div>';
   
   try {
-    console.log(`Fetching quotes for: ${name}`);
-    
-    // Add a cache-buster to prevent caching
     const response = await fetch(`/api/quotes?politician=${encodeURIComponent(name)}&t=${Date.now()}`);
     
     if (!response.ok) {
@@ -307,10 +303,12 @@ async function fetchQuotesForPolitician(name) {
     
     if (data.objects && data.objects.length > 0) {
       const quotesHtml = data.objects.map(statement => {
-        let text = "No text available";
-        if (statement.text) {
-          if (typeof statement.text === 'string') text = statement.text;
-          else if (statement.text.en) text = statement.text.en;
+        let text = statement.text?.en || "";
+        if (!text) return "";
+        
+        // Truncate if too long
+        if (text.length > 300) {
+          text = text.substring(0, 300) + "...";
         }
         
         const date = statement.date ? new Date(statement.date).toLocaleDateString('en-CA', {
@@ -328,12 +326,21 @@ async function fetchQuotesForPolitician(name) {
         `;
       }).join('');
       
-      modalQuotes.innerHTML = quotesHtml;
+      if (quotesHtml) {
+        modalQuotes.innerHTML = quotesHtml;
+      } else {
+        modalQuotes.innerHTML = `
+          <p><i class="fas fa-comment"></i> No recent statements found for ${escapeHtml(name)} in the Hansard records.</p>
+          <p style="font-size: 12px; color: #666; margin-top: 8px;">
+            Statements from House of Commons debates will appear here when available.
+          </p>
+        `;
+      }
     } else {
       modalQuotes.innerHTML = `
         <p><i class="fas fa-comment"></i> No recent statements found for ${escapeHtml(name)}.</p>
         <p style="font-size: 12px; color: #666; margin-top: 8px;">
-          Check back later for updates from your representative.
+          Statements from House of Commons debates will appear here when available.
         </p>
       `;
     }
@@ -341,6 +348,9 @@ async function fetchQuotesForPolitician(name) {
     console.error("Error fetching statements:", error);
     modalQuotes.innerHTML = `
       <p style="color: #c0392b;"><i class="fas fa-exclamation-circle"></i> Unable to load statements at this time.</p>
+      <p style="font-size: 12px; color: #666; margin-top: 8px;">
+        The Hansard service may be temporarily unavailable. Please try again later.
+      </p>
       <button onclick="fetchQuotesForPolitician('${escapeHtml(name)}')" style="
         background: #c0392b;
         color: white;
@@ -356,6 +366,7 @@ async function fetchQuotesForPolitician(name) {
     `;
   }
 }
+
 function getDefaultQuotes(name) {
   return [
     {
