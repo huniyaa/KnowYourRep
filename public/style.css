@@ -271,6 +271,7 @@ body {
   border-radius: 16px;
   box-shadow: 0 4px 20px rgba(0,0,0,0.08);
   z-index: 0;
+  position: relative;
 }
 
 /* Map Legend */
@@ -278,7 +279,8 @@ body {
   position: absolute;
   bottom: 20px;
   right: 20px;
-  background: white;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
   padding: 12px 16px;
   border-radius: 12px;
   box-shadow: 0 2px 12px rgba(0,0,0,0.1);
@@ -286,8 +288,7 @@ body {
   font-size: 11px;
   font-family: 'Libre Baskerville', serif;
   min-width: 140px;
-  backdrop-filter: blur(10px);
-  background: rgba(255, 255, 255, 0.95);
+  pointer-events: none; /* Allows clicking through to map */
 }
 
 .legend-color {
@@ -368,10 +369,31 @@ body {
 
 .party {
   font-size: 0.8rem;
-  color: #c0392b;
-  font-weight: 500;
+  font-weight: 600;
   margin-bottom: 4px;
 }
+
+.party[data-party="Liberal"] { color: #e67e22; }      /* Orange */
+.party[data-party="Conservative"] { color: #e67e22; }  /* Orange */
+.party[data-party="NDP"] { color: #e67e22; }           /* Orange */
+.party[data-party="Green"] { color: #e67e22; }         /* Orange */
+.party[data-party="Bloc Québécois"] { color: #e67e22; } /* Orange */
+.party[data-party="Independent"] { color: #e67e22; }   /* Orange */
+
+/* Or use a consistent warm orange-red */
+.party {
+  color: #e67e22;
+}
+
+/* Alternatively, keep original colors but slightly desaturated */
+.party[data-party="Liberal"] { color: #c0392b; }        /* Original red */
+.party[data-party="Conservative"] { color: #1a4782; }   /* Blue */
+.party[data-party="NDP"] { color: #e67e22; }            /* Orange */
+.party[data-party="Green"] { color: #2ecc71; }          /* Green */
+.party[data-party="Bloc Québécois"] { color: #3498db; }  /* Light Blue */
+.party[data-party="Independent"] { color: #95a5a6; }    /* Grey */
+
+/* I'll use the original colors for clarity - choose whichever you prefer */
 
 .district {
   font-size: 0.75rem;
