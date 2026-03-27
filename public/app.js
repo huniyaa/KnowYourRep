@@ -268,10 +268,20 @@ function displayResults(politicians) {
   
   resultsDiv.innerHTML = politicians.map((rep, index) => {
     const imageUrl = rep.image ? `https://api.openparliament.ca${rep.image}` : null;
-    const politicianId = `politician-${index}`;
+    
+    // Get party color for the card
+    let partyColor = "#e67e22"; // default orange-red
+    if (rep.party) {
+      if (rep.party.includes("Liberal")) partyColor = "#c0392b";
+      else if (rep.party.includes("Conservative")) partyColor = "#1a4782";
+      else if (rep.party.includes("NDP")) partyColor = "#e67e22";
+      else if (rep.party.includes("Green")) partyColor = "#2ecc71";
+      else if (rep.party.includes("Bloc")) partyColor = "#3498db";
+      else partyColor = "#95a5a6";
+    }
     
     return `
-      <div class="card" data-politician-id="${politicianId}" data-name="${escapeHtml(rep.name)}" data-party="${escapeHtml(rep.party)}" data-district="${escapeHtml(rep.district)}" data-province="${escapeHtml(rep.province)}">
+      <div class="card" data-name="${escapeHtml(rep.name)}" data-party="${escapeHtml(rep.party)}" data-district="${escapeHtml(rep.district)}" data-province="${escapeHtml(rep.province)}" data-image="${imageUrl || ''}">
         <div class="avatar">
           ${imageUrl ? 
             `<img src="${imageUrl}" alt="${escapeHtml(rep.name)}" class="mp-photo" onerror="this.onerror=null; this.parentElement.innerHTML='${getInitials(rep.name)}';">` : 
@@ -280,7 +290,7 @@ function displayResults(politicians) {
         </div>
         <div class="info">
           <h3>${escapeHtml(rep.name)}</h3>
-          <p class="party">${escapeHtml(rep.party)}</p>
+          <p class="party" style="color: ${partyColor};">${escapeHtml(rep.party)}</p>
           <p class="district">${escapeHtml(rep.district)}${rep.province ? `, ${rep.province}` : ""}</p>
         </div>
       </div>
@@ -289,23 +299,20 @@ function displayResults(politicians) {
   
   // Add click handlers to cards
   document.querySelectorAll('.card').forEach(card => {
-    card.addEventListener('click', (e) => {
-      // Don't trigger if clicking on avatar image
-      if (e.target.tagName === 'IMG') return;
-      
+    card.addEventListener('click', () => {
       const name = card.dataset.name;
       const party = card.dataset.party;
       const district = card.dataset.district;
       const province = card.dataset.province;
+      const imageUrl = card.dataset.image;
       
-      // Find the full politician object
-      const politician = politicians.find(p => p.name === name);
-      if (politician) {
-        showPoliticianModalWithData(politician);
-      } else {
-        // Fallback
-        window.showPoliticianModal(name, party, district, province);
-      }
+      // Create politician object
+      const politician = {
+        name, party, district, province,
+        image: imageUrl ? imageUrl.replace('https://api.openparliament.ca', '') : null
+      };
+      
+      showPoliticianModalWithData(politician);
     });
   });
 }
