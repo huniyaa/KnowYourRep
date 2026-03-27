@@ -290,27 +290,61 @@ async function fetchQuotesForPolitician(name) {
   const modalQuotes = document.getElementById("modal-quotes-text");
   if (!modalQuotes) return;
   
+  // Show loading state
+  modalQuotes.innerHTML = '<div class="loading-spinner"><i class="fas fa-spinner fa-spin"></i> Loading statements...</div>';
+  
   try {
-    // THIS IS THE KEY CHANGE - call YOUR API, not OpenParliament directly
+    console.log(`Fetching quotes for: ${name}`);
     const response = await fetch(`/api/quotes?politician=${encodeURIComponent(name)}`);
     
-    if (!response.ok) throw new Error("Failed to fetch statements");
+    console.log(`Response status: ${response.status}`);
+    
+    if (!response.ok) {
+      const errorData = await response.json();
+      console.error('Error response:', errorData);
+      throw new Error(errorData.error || `HTTP ${response.status}`);
+    }
     
     const data = await response.json();
+    console.log('Quotes data:', data);
     
     if (data.objects && data.objects.length > 0) {
-      modalQuotes.innerHTML = data.objects.map(statement => `
-        <blockquote style="margin: 12px 0; padding: 8px 12px; background: #f9f9f9; border-left: 3px solid #c0392b;">
-          "${escapeHtml(statement.text?.en || "No text available")}"
-          ${statement.date ? `<footer><small>${new Date(statement.date).toLocaleDateString()}</small></footer>` : ''}
-        </blockquote>
-      `).join('');
+      const quotesHtml = data.objects.map(statement => {
+        const text = statement.text?.en || statement.text || "No text available";
+        const date = statement.date ? new Date(statement.date).toLocaleDateString() : '';
+        
+        return `
+          <blockquote style="margin: 12px 0; padding: 8px 12px; background: #f9f9f9; border-left: 3px solid #c0392b;">
+            "${escapeHtml(text)}"
+            ${date ? `<footer><small>${date}</small></footer>` : ''}
+          </blockquote>
+        `;
+      }).join('');
+      
+      modalQuotes.innerHTML = quotesHtml;
     } else {
-      modalQuotes.innerHTML = "No recent statements found for this politician.";
+      modalQuotes.innerHTML = `
+        <p>No recent statements found for this politician.</p>
+        <small>Statements are from the House of Commons debates.</small>
+      `;
     }
   } catch (error) {
     console.error("Error fetching statements:", error);
-    modalQuotes.innerHTML = "Unable to load statements at this time.";
+    modalQuotes.innerHTML = `
+      <p style="color: #c0392b;">Unable to load statements at this time.</p>
+      <p><small>Error: ${error.message}</small></p>
+      <button onclick="fetchQuotesForPolitician('${escapeHtml(name)}')" style="
+        background: #c0392b;
+        color: white;
+        border: none;
+        padding: 6px 12px;
+        border-radius: 4px;
+        cursor: pointer;
+        margin-top: 8px;
+      ">
+        <i class="fas fa-sync-alt"></i> Retry
+      </button>
+    `;
   }
 }
 
