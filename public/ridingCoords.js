@@ -466,19 +466,23 @@ function getRidingCoordinates(districtName, provinceCode) {
     if (key.toLowerCase() === lowerName) return coords;
   }
   
-  // Try partial match (remove common suffixes)
-  const simplified = districtName.split(/[—–-]/)[0].trim();
+  // Try partial match for districts with different dash types
+  const normalizedName = districtName.replace(/[—–-]/g, '-');
   for (const [key, coords] of Object.entries(ridingCoords)) {
-    if (key.includes(simplified) || simplified.includes(key.split(/[—–-]/)[0])) {
-      return coords;
-    }
+    const normalizedKey = key.replace(/[—–-]/g, '-');
+    if (normalizedKey === normalizedName) return coords;
   }
   
   // Fallback to province center
-  if (provinceCode && provinceCenters[provinceCode]) {
-    console.log(`Using province center for ${districtName}`);
+  if (provinceCode && provinceCenters && provinceCenters[provinceCode]) {
     return provinceCenters[provinceCode];
   }
   
   return { lat: 56.130, lng: -106.346 };
+}
+
+// Make it globally available
+if (typeof window !== 'undefined') {
+  window.ridingCoords = ridingCoords;
+  window.getRidingCoordinates = getRidingCoordinates;
 }
