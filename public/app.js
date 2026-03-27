@@ -149,6 +149,19 @@ function updateMapMarkers(politicians) {
       console.log(`No coordinates for: ${politician.district}`);
       return;
     }
+
+    // Add this debug code inside updateMapMarkers, right after getting coords
+if (!coords) {
+  console.log(`❌ NO COORDS for: ${politician.district} (${politician.province})`);
+  return;
+}
+
+// Log when using province center fallback
+if (provinceCenters[politician.province] && 
+    coords.lat === provinceCenters[politician.province].lat && 
+    coords.lng === provinceCenters[politician.province].lng) {
+  console.log(`📍 Using province center for: ${politician.district} (${politician.province})`);
+}
     
     if (!window.ridingCoords[politician.district]) {
       fallbackUsed++;
