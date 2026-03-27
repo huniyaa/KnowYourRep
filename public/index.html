@@ -27,99 +27,108 @@
   </section>
 
   <!-- Main App Content - Hidden until scroll -->
+  <div id="app-content" class="app-content hidden">
+    <!-- Sticky Header -->
+    <header id="sticky-header" class="sticky-header">
+      <div class="header-container">
+        <h1 class="header-title">Know <span class="underlined-small">Your</span> Rep</h1>
+        <p class="header-subtitle">Discover your local political representatives beyond party lines</p>
+      </div>
+    </header>
+
+    <!-- Main Layout with Map and Side Panel -->
     <div class="main-layout">
-    <!-- Left: Map Area -->
-    <div class="map-area">
-      <div id="controls" class="controls">
-        <div id="search-wrapper">
-          <input type="text" id="search" placeholder="Search by name or district…" autocomplete="off" />
-          <ul id="dropdown" hidden></ul>
-        </div>
-
-    <!-- Controls -->
-    <div id="controls" class="controls">
-      <div id="search-wrapper">
-        <input type="text" id="search" placeholder="Search by name or district…" autocomplete="off" />
-        <ul id="dropdown" hidden></ul>
-      </div>
-      <select id="province-filter">
-        <option value="">All provinces</option>
-        <option value="AB">Alberta</option>
-        <option value="BC">British Columbia</option>
-        <option value="MB">Manitoba</option>
-        <option value="NB">New Brunswick</option>
-        <option value="NL">Newfoundland and Labrador</option>
-        <option value="NS">Nova Scotia</option>
-        <option value="NT">Northwest Territories</option>
-        <option value="NU">Nunavut</option>
-        <option value="ON">Ontario</option>
-        <option value="PE">Prince Edward Island</option>
-        <option value="QC">Quebec</option>
-        <option value="SK">Saskatchewan</option>
-        <option value="YT">Yukon</option>
-      </select>
-      <button id="use-location" class="location-btn">
-        <i class="fas fa-location-dot"></i> My Location
-      </button>
-    </div>
-
-    <!-- Quick Filters -->
-    <div class="province-quick-filters">
-      <button class="quick-filter" data-province="">All Canada</button>
-      <button class="quick-filter" data-province="ON">Ontario</button>
-      <button class="quick-filter" data-province="QC">Quebec</button>
-      <button class="quick-filter" data-province="BC">BC</button>
-      <button class="quick-filter" data-province="AB">Alberta</button>
-      <button class="quick-filter" data-province="MB">Manitoba</button>
-      <button class="quick-filter" data-province="SK">Saskatchewan</button>
-      <button class="quick-filter" data-province="NS">Nova Scotia</button>
-      <button class="quick-filter" data-province="NB">New Brunswick</button>
-      <button class="quick-filter" data-province="NL">Newfoundland</button>
-      <button class="quick-filter" data-province="PE">PEI</button>
-      <button class="quick-filter" data-province="YT">Yukon</button>
-      <button class="quick-filter" data-province="NT">NWT</button>
-      <button class="quick-filter" data-province="NU">Nunavut</button>
-    </div>
-    
-    <div id="status"></div>
-    <div id="map"></div>
-    
-    <!-- Province Info Panel -->
-    <div id="province-info" class="province-info" style="display: none;">
-      <div class="province-info-content">
-        <span class="province-name"></span>
-        <span class="province-count"></span>
-        <button id="reset-view" class="reset-view-btn">Show All Canada</button>
-      </div>
-    </div>
-    
-    <!-- Party Color Legend -->
-    <div id="map-legend" class="map-legend">
-      <strong>🎨 Political Parties</strong>
-      <div><span class="legend-color liberal"></span> Liberal</div>
-      <div><span class="legend-color conservative"></span> Conservative</div>
-      <div><span class="legend-color ndp"></span> NDP</div>
-      <div><span class="legend-color green"></span> Green</div>
-      <div><span class="legend-color bloc"></span> Bloc Québécois</div>
-      <div><span class="legend-color independent"></span> Independent/Other</div>
-      <hr>
-      <div class="legend-note"><span class="legend-color approximate"></span> ≈ Approximate location</div>
-    </div>
-     <!-- Right: Results Panel -->
-    <div class="results-panel" id="results-panel">
-      <div class="panel-header">
-        <h3><i class="fas fa-user-friends"></i> Representatives</h3>
-        <div class="panel-controls">
-          <button id="show-all-btn" class="show-all-btn" style="display: none;">
-            <i class="fas fa-list"></i> Show All
-          </button>
-          <button id="clear-results-btn" class="clear-btn" style="display: none;">
-            <i class="fas fa-times"></i> Clear
+      <!-- Left: Map Area -->
+      <div class="map-area">
+        <div id="controls" class="controls">
+          <div id="search-wrapper">
+            <input type="text" id="search" placeholder="Search by name or district…" autocomplete="off" />
+            <ul id="dropdown" hidden></ul>
+          </div>
+          <select id="province-filter">
+            <option value="">All provinces</option>
+            <option value="AB">Alberta</option>
+            <option value="BC">British Columbia</option>
+            <option value="MB">Manitoba</option>
+            <option value="NB">New Brunswick</option>
+            <option value="NL">Newfoundland and Labrador</option>
+            <option value="NS">Nova Scotia</option>
+            <option value="NT">Northwest Territories</option>
+            <option value="NU">Nunavut</option>
+            <option value="ON">Ontario</option>
+            <option value="PE">Prince Edward Island</option>
+            <option value="QC">Quebec</option>
+            <option value="SK">Saskatchewan</option>
+            <option value="YT">Yukon</option>
+          </select>
+          <button id="use-location" class="location-btn">
+            <i class="fas fa-location-dot"></i> My Location
           </button>
         </div>
+
+        <!-- Quick Filters -->
+        <div class="province-quick-filters">
+          <button class="quick-filter" data-province="">All Canada</button>
+          <button class="quick-filter" data-province="ON">Ontario</button>
+          <button class="quick-filter" data-province="QC">Quebec</button>
+          <button class="quick-filter" data-province="BC">BC</button>
+          <button class="quick-filter" data-province="AB">Alberta</button>
+          <button class="quick-filter" data-province="MB">Manitoba</button>
+          <button class="quick-filter" data-province="SK">Saskatchewan</button>
+          <button class="quick-filter" data-province="NS">Nova Scotia</button>
+          <button class="quick-filter" data-province="NB">New Brunswick</button>
+          <button class="quick-filter" data-province="NL">Newfoundland</button>
+          <button class="quick-filter" data-province="PE">PEI</button>
+          <button class="quick-filter" data-province="YT">Yukon</button>
+          <button class="quick-filter" data-province="NT">NWT</button>
+          <button class="quick-filter" data-province="NU">Nunavut</button>
+        </div>
+        
+        <div id="map-container">
+          <div id="map"></div>
+          <!-- Party Color Legend - Inside map container -->
+          <div id="map-legend" class="map-legend">
+            <strong>🎨 Political Parties</strong>
+            <div><span class="legend-color liberal"></span> Liberal</div>
+            <div><span class="legend-color conservative"></span> Conservative</div>
+            <div><span class="legend-color ndp"></span> NDP</div>
+            <div><span class="legend-color green"></span> Green</div>
+            <div><span class="legend-color bloc"></span> Bloc Québécois</div>
+            <div><span class="legend-color independent"></span> Independent/Other</div>
+            <hr>
+            <div class="legend-note"><span class="legend-color approximate"></span> ≈ Approximate location</div>
+          </div>
+        </div>
+        
+        <!-- Province Info Panel -->
+        <div id="province-info" class="province-info" style="display: none;">
+          <div class="province-info-content">
+            <span class="province-name"></span>
+            <span class="province-count"></span>
+            <button id="reset-view" class="reset-view-btn">Show All Canada</button>
+          </div>
+        </div>
       </div>
-    <div id="results"></div>
-    <div id="pagination"></div>
+
+      <!-- Right: Results Panel -->
+      <div class="results-panel" id="results-panel">
+        <div class="panel-header">
+          <h3><i class="fas fa-user-friends"></i> Representatives</h3>
+          <div class="panel-controls">
+            <button id="clear-results-btn" class="clear-btn" style="display: none;">
+              <i class="fas fa-times"></i> Clear
+            </button>
+          </div>
+        </div>
+        <div id="status" class="status-message"></div>
+        <div id="results" class="results-list"></div>
+        <div id="pagination" class="pagination"></div>
+        <div class="panel-empty" id="panel-empty">
+          <i class="fas fa-search"></i>
+          <p>Search by name or district, or click on a map marker to see representatives</p>
+        </div>
+      </div>
+    </div>
   </div>
   
   <!-- Politician Detail Modal -->
