@@ -847,3 +847,64 @@ blockquote footer {
   transform: scale(1.1);
   transition: transform 0.2s ease;
 }
+
+/* Quote styling */
+#modal-quotes-text blockquote {
+  margin: 16px 0;
+  padding: 16px;
+  background: #f9f9f9;
+  border-left: 4px solid #c0392b;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+}
+
+#modal-quotes-text blockquote:hover {
+  background: #fff5f5;
+  transform: translateX(4px);
+}
+
+#modal-quotes-text blockquote i.fa-quote-left {
+  color: #c0392b;
+  margin-right: 8px;
+  opacity: 0.5;
+  float: left;
+  font-size: 14px;
+}
+
+#modal-quotes-text blockquote div {
+  margin-left: 24px;
+  line-height: 1.5;
+  color: #333;
+}
+
+#modal-quotes-text blockquote footer {
+  margin-top: 12px;
+  font-size: 11px;
+  color: #999;
+  font-style: normal;
+}
+
+/* Scrollbar for quotes */
+#modal-quotes-text {
+  max-height: 400px;
+  overflow-y: auto;
+  padding-right: 8px;
+}
+
+#modal-quotes-text::-webkit-scrollbar {
+  width: 6px;
+}
+
+#modal-quotes-text::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 3px;
+}
+
+#modal-quotes-text::-webkit-scrollbar-thumb {
+  background: #c0392b;
+  border-radius: 3px;
+}
+
+#modal-quotes-text::-webkit-scrollbar-thumb:hover {
+  background: #a93226;
+}

@@ -305,19 +305,14 @@ window.showPoliticianModal = (name, party, district, province) => {
 };
 };
 
-async function fetchQuotesForPolitician(name, riding = "") {
+async function fetchQuotesForPolitician(name) {
   const modalQuotes = document.getElementById("modal-quotes-text");
   if (!modalQuotes) return;
   
-  modalQuotes.innerHTML = '<div class="loading-spinner"><i class="fas fa-spinner fa-spin"></i> Loading statements from Hansard...</div>';
+  modalQuotes.innerHTML = '<div class="loading-spinner"><i class="fas fa-spinner fa-spin"></i> Loading speeches from Hansard...</div>';
   
   try {
-    let url = `/api/quotes?politician=${encodeURIComponent(name)}&t=${Date.now()}`;
-    if (riding) {
-      url += `&riding=${encodeURIComponent(riding)}`;
-    }
-    
-    const response = await fetch(url);
+    const response = await fetch(`/api/quotes?politician=${encodeURIComponent(name)}&t=${Date.now()}`);
     
     if (!response.ok) {
       throw new Error(`HTTP ${response.status}`);
@@ -328,23 +323,17 @@ async function fetchQuotesForPolitician(name, riding = "") {
     if (data.objects && data.objects.length > 0) {
       const quotesHtml = data.objects.map(statement => {
         let text = statement.text?.en || "";
-        if (!text) return "";
+        if (!text || text === "No text available") return "";
         
-        if (text.length > 300) {
-          text = text.substring(0, 300) + "...";
-        }
-        
-        const date = statement.date ? new Date(statement.date).toLocaleDateString('en-CA', {
-          year: 'numeric',
-          month: 'long',
-          day: 'numeric'
-        }) : '';
+        const date = statement.date || "";
         
         return `
-          <blockquote style="margin: 12px 0; padding: 16px; background: #f9f9f9; border-left: 4px solid #c0392b; border-radius: 8px;">
-            <i class="fas fa-quote-left" style="color: #c0392b; margin-right: 8px; opacity: 0.5;"></i>
-            "${escapeHtml(text)}"
-            ${date ? `<footer style="margin-top: 12px; font-size: 11px; color: #999;">${date}</footer>` : ''}
+          <blockquote style="margin: 16px 0; padding: 16px; background: #f9f9f9; border-left: 4px solid #c0392b; border-radius: 8px;">
+            <i class="fas fa-quote-left" style="color: #c0392b; margin-right: 8px; opacity: 0.5; float: left;"></i>
+            <div style="margin-left: 24px;">
+              "${escapeHtml(text)}"
+              ${date ? `<footer style="margin-top: 12px; font-size: 11px; color: #999;">📅 ${date}</footer>` : ''}
+            </div>
           </blockquote>
         `;
       }).join('');
@@ -353,36 +342,43 @@ async function fetchQuotesForPolitician(name, riding = "") {
         modalQuotes.innerHTML = quotesHtml;
       } else {
         modalQuotes.innerHTML = `
-          <p><i class="fas fa-comment"></i> No recent statements found for ${escapeHtml(name)} in the Hansard records.</p>
-          <p style="font-size: 12px; color: #666; margin-top: 8px;">
-            Statements from House of Commons debates will appear here when available.
+          <p style="text-align: center; color: #666;">
+            <i class="fas fa-comment"></i> No recent speeches found for ${escapeHtml(name)}.
+          </p>
+          <p style="text-align: center; font-size: 12px; color: #999; margin-top: 8px;">
+            Speeches from the House of Commons will appear here when available.
           </p>
         `;
       }
     } else {
       modalQuotes.innerHTML = `
-        <p><i class="fas fa-comment"></i> No recent statements found for ${escapeHtml(name)}.</p>
-        <p style="font-size: 12px; color: #666; margin-top: 8px;">
-          Try checking back later for updates from your representative.
+        <p style="text-align: center; color: #666;">
+          <i class="fas fa-comment"></i> No recent speeches found for ${escapeHtml(name)}.
+        </p>
+        <p style="text-align: center; font-size: 12px; color: #999; margin-top: 8px;">
+          Check back later for updates from your representative.
         </p>
       `;
     }
   } catch (error) {
-    console.error("Error fetching statements:", error);
+    console.error("Error fetching speeches:", error);
     modalQuotes.innerHTML = `
-      <p style="color: #c0392b;"><i class="fas fa-exclamation-circle"></i> Unable to load statements at this time.</p>
-      <button onclick="fetchQuotesForPolitician('${escapeHtml(name)}', '${escapeHtml(riding)}')" style="
-        background: #c0392b;
-        color: white;
-        border: none;
-        padding: 8px 16px;
-        border-radius: 6px;
-        cursor: pointer;
-        margin-top: 12px;
-        font-size: 12px;
-      ">
-        <i class="fas fa-sync-alt"></i> Retry
-      </button>
+      <p style="text-align: center; color: #c0392b;">
+        <i class="fas fa-exclamation-circle"></i> Unable to load speeches at this time.
+      </p>
+      <div style="text-align: center; margin-top: 12px;">
+        <button onclick="fetchQuotesForPolitician('${escapeHtml(name)}')" style="
+          background: #c0392b;
+          color: white;
+          border: none;
+          padding: 8px 16px;
+          border-radius: 6px;
+          cursor: pointer;
+          font-size: 12px;
+        ">
+          <i class="fas fa-sync-alt"></i> Retry
+        </button>
+      </div>
     `;
   }
 }

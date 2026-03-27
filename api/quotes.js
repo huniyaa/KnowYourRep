@@ -47,12 +47,11 @@ export default async function handler(req, res) {
     
     const speechesData = await speechesResponse.json();
     
-    // Format the speeches - FIXED: using content field, not text
+    // Format the speeches and clean HTML
     const formatted = speechesData.objects?.map(speech => {
       // Get the text from the content field
       let text = "";
       
-      // Check different possible field names
       if (speech.content) {
         if (typeof speech.content === 'string') {
           text = speech.content;
@@ -65,27 +64,50 @@ export default async function handler(req, res) {
         text = speech.text;
       }
       
-      // Clean up the text
       if (text) {
+        // Strip HTML tags
+        text = text.replace(/<[^>]*>/g, ' ');
+        
+        // Replace HTML entities
+        text = text.replace(/&quot;/g, '"')
+                   .replace(/&amp;/g, '&')
+                   .replace(/&lt;/g, '<')
+                   .replace(/&gt;/g, '>')
+                   .replace(/&nbsp;/g, ' ')
+                   .replace(/&#39;/g, "'");
+        
+        // Clean up whitespace
         text = text.replace(/\s+/g, ' ').trim();
         
         // Truncate if too long
-        if (text.length > 400) {
-          text = text.substring(0, 400) + "...";
+        if (text.length > 450) {
+          text = text.substring(0, 450) + "...";
         }
       }
       
-      // Get the date from time field or date field
+      // Get the date
       const date = speech.time || speech.date;
+      let formattedDate = "";
+      if (date) {
+        try {
+          formattedDate = new Date(date).toLocaleDateString('en-CA', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+          });
+        } catch (e) {
+          formattedDate = date;
+        }
+      }
       
       return {
         text: { en: text || "No text available" },
-        date: date,
+        date: formattedDate,
         context: "House of Commons Speech"
       };
-    }).filter(s => s.text.en && s.text.en !== "No text available") || [];
+    }).filter(s => s.text.en && s.text.en !== "No text available" && s.text.en !== "") || [];
     
-    console.log(`Found ${formatted.length} speeches for ${politicianObj.name}`);
+    console.log(`Found ${formatted.length} cleaned speeches for ${politicianObj.name}`);
     
     res.status(200).json({ objects: formatted });
     
