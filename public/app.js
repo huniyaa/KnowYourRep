@@ -128,57 +128,30 @@ async function fetchPoliticians(query = "", province = "", offset = 0) {
     console.error(err);
     statusDiv.innerHTML = `<p class="error">⚠️ ${err.message}</p>`;
   }
+  
 }
 
-// ─── Update map markers with fallback support ─────────────────────────────────
-// ─── Update map markers with party colors and province zoom ─────────────────
+
 // ─── Update map markers with party colors ─────────────────────────────────────
 function updateMapMarkers(politicians) {
-  if (!markersLayer || !map) {
-    console.error("Markers layer or map not initialized");
-    return;
-  }
-  
-  console.log(`Updating map with ${politicians.length} politicians`);
+  if (!markersLayer || !map) return;
   
   markersLayer.clearLayers();
   const bounds = [];
   let markersAdded = 0;
-  let noCoords = [];
   
   politicians.forEach(politician => {
-    // Try to get coordinates
-    let coords = null;
+    let coords = window.getRidingCoordinates 
+      ? window.getRidingCoordinates(politician.district, politician.province)
+      : (window.ridingCoords && window.ridingCoords[politician.district]);
     
-    // Try exact match from ridingCoords
-    if (window.ridingCoords && window.ridingCoords[politician.district]) {
-      coords = window.ridingCoords[politician.district];
-    }
-    // Try the getRidingCoordinates function
-    else if (window.getRidingCoordinates) {
-      coords = window.getRidingCoordinates(politician.district, politician.province);
-    }
-    
-    if (!coords) {
-      noCoords.push(`${politician.district} (${politician.province})`);
-      return;
-    }
+    if (!coords) return;
     
     markersAdded++;
     
     // Get party color
-    let markerColor = "#c0392b"; // Default red
-    if (window.getMarkerColor) {
-      markerColor = window.getMarkerColor(politician.party);
-    } else if (politician.party) {
-      if (politician.party.includes("Liberal")) markerColor = "#d1001f";
-      else if (politician.party.includes("Conservative")) markerColor = "#1a4782";
-      else if (politician.party.includes("NDP")) markerColor = "#f48d2b";
-      else if (politician.party.includes("Green")) markerColor = "#3d9b35";
-      else if (politician.party.includes("Bloc")) markerColor = "#00b5e2";
-    }
+    let markerColor = window.getMarkerColor ? window.getMarkerColor(politician.party) : "#c0392b";
     
-    // Create custom marker
     const customIcon = L.divIcon({
       className: 'custom-marker',
       html: `<div style="
@@ -213,18 +186,26 @@ function updateMapMarkers(politicians) {
     bounds.push([coords.lat, coords.lng]);
   });
   
-  // Log what happened
-  console.log(`Markers added: ${markersAdded} out of ${politicians.length} politicians`);
-  if (noCoords.length > 0) {
-    console.warn(`Missing coordinates for ${noCoords.length} districts:`, noCoords.slice(0, 5));
+  // Zoom with animation and appropriate padding
+  if (bounds.length > 0 && map) {
+    // Add a small delay to ensure markers are rendered
+    setTimeout(() => {
+      map.flyToBounds(bounds, { 
+        padding: [50, 50],
+        duration: 0.8, // Smooth animation
+        easeLinearity: 0.25
+      });
+    }, 100);
   }
   
-  // Zoom to fit all markers
-  if (bounds.length > 0 && map) {
-    map.fitBounds(bounds, { padding: [50, 50] });
-    console.log(`Map zoomed to show ${bounds.length} markers`);
-  } else {
-    console.warn("No bounds to fit - no markers added");
+  console.log(`Map updated: ${markersAdded} markers added`);
+  
+  // If there's only one marker, zoom in closer
+  if (bounds.length === 1 && map) {
+    const singleMarker = bounds[0];
+    map.flyTo(singleMarker, 10, {
+      duration: 0.8
+    });
   }
 }
 
@@ -529,10 +510,14 @@ if (searchInput) {
   searchInput.addEventListener("blur", () => setTimeout(closeDropdown, 150));
 }
 
-// Province filter - Simplified and fixed
+// Province filter with better visibility
 if (provinceFilter) {
-  provinceFilter.addEventListener("change", () => {
+  provinceFilter.addEventListener("change", async () => {
     const selectedProvince = provinceFilter.value;
+    const provinceName = selectedProvince 
+      ? provinceFilter.options[provinceFilter.selectedIndex]?.text 
+      : "all of Canada";
+    
     console.log(`Province filter changed to: ${selectedProvince || "ALL"}`);
     
     // Reset search and pagination
@@ -542,8 +527,21 @@ if (provinceFilter) {
     currentProvince = selectedProvince;
     closeDropdown();
     
+    // Show loading with province name
+    statusDiv.innerHTML = `<div class="loading-spinner"><i class="fas fa-spinner fa-spin"></i> Loading ${provinceName} representatives...</div>`;
+    
     // Fetch politicians for selected province
-    fetchPoliticians("", selectedProvince, 0);
+    await fetchPoliticians("", selectedProvince, 0);
+    
+    // After fetching, show a message about what's being displayed
+    if (selectedProvince && totalCount > 0) {
+      statusDiv.innerHTML = `<i class="fas fa-check-circle"></i> Showing ${totalCount} representative${totalCount !== 1 ? 's' : ''} from ${provinceName}`;
+      setTimeout(() => {
+        if (statusDiv.innerHTML.includes(provinceName)) {
+          statusDiv.innerHTML = "";
+        }
+      }, 3000);
+    }
   });
 }
 
@@ -610,4 +608,48 @@ if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', init);
 } else {
   init();
+}
+
+function updateProvinceInfo(province, count) {
+  const infoPanel = document.getElementById('province-info');
+  if (!infoPanel) return;
+  
+  if (province && count > 0) {
+    const provinceName = provinceFilter?.options[provinceFilter.selectedIndex]?.text || province;
+    infoPanel.querySelector('.province-name').textContent = provinceName;
+    infoPanel.querySelector('.province-count').textContent = `${count} representative${count !== 1 ? 's' : ''}`;
+    infoPanel.style.display = 'block';
+    
+    // Auto-hide after 5 seconds
+    setTimeout(() => {
+      if (infoPanel.style.display === 'block') {
+        infoPanel.style.opacity = '0.8';
+        setTimeout(() => {
+          if (infoPanel.style.display === 'block') {
+            infoPanel.style.display = 'none';
+            infoPanel.style.opacity = '1';
+          }
+        }, 3000);
+      }
+    }, 5000);
+  } else {
+    infoPanel.style.display = 'none';
+  }
+}
+
+// Reset view button
+const resetViewBtn = document.getElementById('reset-view');
+if (resetViewBtn) {
+  resetViewBtn.addEventListener('click', () => {
+    if (provinceFilter) provinceFilter.value = '';
+    currentProvince = '';
+    currentQuery = '';
+    if (searchInput) searchInput.value = '';
+    currentOffset = 0;
+    fetchPoliticians('', '', 0);
+    
+    // Hide province info
+    const infoPanel = document.getElementById('province-info');
+    if (infoPanel) infoPanel.style.display = 'none';
+  });
 }

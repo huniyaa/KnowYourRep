@@ -745,3 +745,57 @@ blockquote footer {
   font-size: 16px;
   margin-right: 6px;
 }
+
+/* Province Info Panel */
+.province-info {
+  position: absolute;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: white;
+  padding: 12px 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.15);
+  z-index: 1000;
+  border-left: 4px solid #c0392b;
+  pointer-events: auto;
+}
+
+.province-info-content {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.province-name {
+  font-weight: bold;
+  color: #c0392b;
+  font-size: 16px;
+}
+
+.province-count {
+  color: #666;
+  font-size: 14px;
+}
+
+.reset-view-btn {
+  padding: 6px 12px;
+  background: #c0392b;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 12px;
+  transition: background 0.2s;
+}
+
+.reset-view-btn:hover {
+  background: #a93226;
+}
+
+/* Make sure map container allows absolute positioning of the info panel */
+#map {
+  position: relative;
+}
