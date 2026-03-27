@@ -66,11 +66,6 @@ async function fetchPoliticians(query = "", province = "", offset = 0) {
     totalCount = data.count;
     currentOffset = data.offset;
     
-    if (!politicians.length) {
-      statusDiv.innerHTML = '<p class="empty">No politicians found. Try adjusting your search.</p>';
-      if (markersLayer) markersLayer.clearLayers();
-      return;
-    }
     
     const from = offset + 1;
     const to = Math.min(offset + LIMIT, totalCount);
@@ -135,40 +130,58 @@ async function fetchPoliticians(query = "", province = "", offset = 0) {
 // ─── Update map markers with party colors ─────────────────────────────────────
 // ─── Update map markers with party-colored pins ─────────────────────────────────────
 // ─── Update map markers with party-colored default markers ───────────────────
+// ─── Update map markers with colored classic markers ─────────────────────────
 function updateMapMarkers(politicians) {
   if (!markersLayer || !map) return;
   
   markersLayer.clearLayers();
   const bounds = [];
   let markersAdded = 0;
+  let fallbackUsed = 0;
   
   politicians.forEach(politician => {
+    // Get coordinates
     let coords = window.getRidingCoordinates 
       ? window.getRidingCoordinates(politician.district, politician.province)
       : (window.ridingCoords && window.ridingCoords[politician.district]);
     
-    if (!coords) return;
+    if (!coords) {
+      console.log(`No coordinates for: ${politician.district} (${politician.province})`);
+      return;
+    }
     
+    if (!window.ridingCoords[politician.district]) {
+      fallbackUsed++;
+    }
     markersAdded++;
     
     // Get party color
-    let markerColor = window.getMarkerColor ? window.getMarkerColor(politician.party) : "#c0392b";
+    let markerColor = "#c0392b"; // Default red
+    if (politician.party) {
+      if (politician.party.includes("Liberal")) markerColor = "#d1001f";
+      else if (politician.party.includes("Conservative")) markerColor = "#1a4782";
+      else if (politician.party.includes("NDP") || politician.party.includes("New Democratic")) markerColor = "#f48d2b";
+      else if (politician.party.includes("Green")) markerColor = "#3d9b35";
+      else if (politician.party.includes("Bloc")) markerColor = "#00b5e2";
+      else if (politician.party.includes("Independent")) markerColor = "#6c757d";
+    }
     
-    // Create custom marker using Leaflet's default marker with custom color
-    // We need to create an SVG path for the default marker shape with custom color
-    const pinSvg = `
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 36" width="24" height="36">
-        <path fill="${markerColor}" stroke="white" stroke-width="1.5" d="M12,0 C7.6,0 4,3.6 4,8 C4,14 12,24 12,24 C12,24 20,14 20,8 C20,3.6 16.4,0 12,0 Z M12,11 C10.3,11 9,9.7 9,8 C9,6.3 10.3,5 12,5 C13.7,5 15,6.3 15,8 C15,9.7 13.7,11 12,11 Z"/>
-        <circle fill="white" cx="12" cy="8" r="2.5"/>
-      </svg>
-    `;
-    
-    const pinIcon = L.divIcon({
-      className: 'custom-default-pin',
-      html: pinSvg,
-      iconSize: [24, 36],
-      popupAnchor: [0, -18],
-      iconAnchor: [12, 36]
+    // Create a colored marker using Leaflet's default marker with custom color
+    // We'll use a colored circle inside a standard marker shape
+    const coloredIcon = L.divIcon({
+      className: 'colored-marker',
+      html: `<div style="position: relative; width: 25px; height: 41px;">
+        <svg width="25" height="41" viewBox="0 0 25 41" xmlns="http://www.w3.org/2000/svg">
+          <path d="M12.5 0C5.6 0 0 5.6 0 12.5C0 21.9 12.5 41 12.5 41C12.5 41 25 21.9 25 12.5C25 5.6 19.4 0 12.5 0Z" 
+                fill="${markerColor}" 
+                stroke="white" 
+                stroke-width="1.5"/>
+          <circle cx="12.5" cy="12.5" r="3.5" fill="white"/>
+        </svg>
+      </div>`,
+      iconSize: [25, 41],
+      popupAnchor: [0, -20],
+      iconAnchor: [12.5, 41]
     });
     
     const popupContent = `
@@ -183,30 +196,18 @@ function updateMapMarkers(politicians) {
       </div>
     `;
     
-    const marker = L.marker([coords.lat, coords.lng], { icon: pinIcon })
+    const marker = L.marker([coords.lat, coords.lng], { icon: coloredIcon })
       .bindPopup(popupContent);
     
     markersLayer.addLayer(marker);
     bounds.push([coords.lat, coords.lng]);
   });
   
-  // Zoom with animation
   if (bounds.length > 0 && map) {
-    setTimeout(() => {
-      map.flyToBounds(bounds, { 
-        padding: [50, 50],
-        duration: 0.8,
-        easeLinearity: 0.25
-      });
-    }, 100);
+    map.fitBounds(bounds, { padding: [40, 40] });
   }
   
-  console.log(`Map updated: ${markersAdded} markers added`);
-  
-  if (bounds.length === 1 && map) {
-    const singleMarker = bounds[0];
-    map.flyTo(singleMarker, 10, { duration: 0.8 });
-  }
+  console.log(`Map updated: ${markersAdded} markers added, ${fallbackUsed} used fallback coordinates`);
 }
 
 function initQuickFilters() {
