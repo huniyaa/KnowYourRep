@@ -974,6 +974,7 @@ async function init() {
   // Initialize map
   map = initMap();
   initScrollAnimation();  // <-- ADD THIS LINE
+  map = initMap();
   
   // Make sure modal is hidden initially
   if (modal) {
