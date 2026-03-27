@@ -16,7 +16,7 @@ const ridingCoords = {
   "Algonquin—Renfrew—Pembroke": { lat: 45.60, lng: -78.03 }, 
   "Argenteuil—La Petite-Nation": { lat: 45.70, lng: -74.60 }, 
   "Aurora—Oak Ridges—Richmond Hill": { lat: 43.9, lng: -79.80 }, 
-  "Avalon": { lat: 33.3428, lng: -118.3282 }, 
+  "Avalon": { lat: 47.49, lng: -53.49}, 
   "Barrie South—Innisfil": { lat: 44.27, lng:-79.62 }, 
   "Barrie—Springwater—Oro-Medonte": { lat: 44.45, lng: -79.7 }, 
   "Battle River—Crowfoot": { lat: 52.65, lng: -111.30 },
