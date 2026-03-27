@@ -456,33 +456,78 @@ if (typeof module !== 'undefined' && module.exports) {
 }
 
 // Make sure this function exists in your ridingCoords.js
+// Improved get coordinates with fuzzy matching
 function getRidingCoordinates(districtName, provinceCode) {
-  // Try exact match
-  if (ridingCoords[districtName]) return ridingCoords[districtName];
+  if (!districtName) return provinceCenters[provinceCode] || { lat: 56.130, lng: -106.346 };
   
-  // Try case-insensitive match
-  const lowerName = districtName.toLowerCase();
-  for (const [key, coords] of Object.entries(ridingCoords)) {
-    if (key.toLowerCase() === lowerName) return coords;
+  // 1. Try exact match first
+  if (ridingCoords[districtName]) {
+    return ridingCoords[districtName];
   }
   
-  // Try partial match for districts with different dash types
+  // 2. Try case-insensitive match
+  const lowerName = districtName.toLowerCase();
+  for (const [key, coords] of Object.entries(ridingCoords)) {
+    if (key.toLowerCase() === lowerName) {
+      return coords;
+    }
+  }
+  
+  // 3. Try normalized dash/hyphen matching
   const normalizedName = districtName.replace(/[—–-]/g, '-');
   for (const [key, coords] of Object.entries(ridingCoords)) {
     const normalizedKey = key.replace(/[—–-]/g, '-');
-    if (normalizedKey === normalizedName) return coords;
+    if (normalizedKey === normalizedName) {
+      return coords;
+    }
   }
   
-  // Fallback to province center
-  if (provinceCode && provinceCenters && provinceCenters[provinceCode]) {
+  // 4. Try matching by city name (first part before dash/hyphen)
+  const firstPart = districtName.split(/[—–-]/)[0].trim().toLowerCase();
+  const possibleMatches = [];
+  
+  for (const [key, coords] of Object.entries(ridingCoords)) {
+    const keyFirstPart = key.split(/[—–-]/)[0].trim().toLowerCase();
+    if (keyFirstPart === firstPart || keyFirstPart.includes(firstPart) || firstPart.includes(keyFirstPart)) {
+      possibleMatches.push({ key, coords, score: keyFirstPart === firstPart ? 2 : 1 });
+    }
+  }
+  
+  if (possibleMatches.length > 0) {
+    // Return the best match
+    possibleMatches.sort((a, b) => b.score - a.score);
+    console.log(`Fuzzy match: "${districtName}" → "${possibleMatches[0].key}"`);
+    return possibleMatches[0].coords;
+  }
+  
+  // 5. Try matching by removing "—" and common suffixes
+  const cleanedName = districtName
+    .replace(/—/g, ' ')
+    .replace(/-/g, ' ')
+    .replace(/South|North|East|West|Centre|Central|—/g, '')
+    .trim()
+    .toLowerCase();
+  
+  for (const [key, coords] of Object.entries(ridingCoords)) {
+    const cleanedKey = key
+      .replace(/—/g, ' ')
+      .replace(/-/g, ' ')
+      .replace(/South|North|East|West|Centre|Central|—/g, '')
+      .trim()
+      .toLowerCase();
+    
+    if (cleanedKey === cleanedName || cleanedKey.includes(cleanedName) || cleanedName.includes(cleanedKey)) {
+      console.log(`Cleaned match: "${districtName}" → "${key}"`);
+      return coords;
+    }
+  }
+  
+  // 6. Finally, fallback to province center
+  if (provinceCode && provinceCenters[provinceCode]) {
+    console.log(`Using province center for "${districtName}" (${provinceCode})`);
     return provinceCenters[provinceCode];
   }
   
+  console.log(`No match found for "${districtName}"`);
   return { lat: 56.130, lng: -106.346 };
-}
-
-// Make it globally available
-if (typeof window !== 'undefined') {
-  window.ridingCoords = ridingCoords;
-  window.getRidingCoordinates = getRidingCoordinates;
 }
