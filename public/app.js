@@ -254,18 +254,27 @@ if (document.readyState === 'loading') {
 function displayResults(politicians) {
   if (!resultsDiv) return;
   
-  resultsDiv.innerHTML = politicians.map(rep => `
-    <div class="card" onclick="window.showPoliticianModal('${escapeHtml(rep.name)}', '${escapeHtml(rep.party)}', '${escapeHtml(rep.district)}', '${escapeHtml(rep.province)}')">
-      <div class="avatar">${getInitials(rep.name)}</div>
-      <div class="info">
-        <h3>${escapeHtml(rep.name)}</h3>
-        <p class="party">${escapeHtml(rep.party)}</p>
-        <p class="district">${escapeHtml(rep.district)}${rep.province ? `, ${rep.province}` : ""}</p>
+  resultsDiv.innerHTML = politicians.map(rep => {
+    // Get the image URL - use a default if none exists
+    const imageUrl = rep.image ? `https://api.openparliament.ca${rep.image}` : null;
+    
+    return `
+      <div class="card" onclick="window.showPoliticianModal('${escapeHtml(rep.name)}', '${escapeHtml(rep.party)}', '${escapeHtml(rep.district)}', '${escapeHtml(rep.province)}')">
+        <div class="avatar">
+          ${imageUrl ? 
+            `<img src="${imageUrl}" alt="${escapeHtml(rep.name)}" class="mp-photo" onerror="this.onerror=null; this.parentElement.innerHTML='${getInitials(rep.name)}';">` : 
+            getInitials(rep.name)
+          }
+        </div>
+        <div class="info">
+          <h3>${escapeHtml(rep.name)}</h3>
+          <p class="party">${escapeHtml(rep.party)}</p>
+          <p class="district">${escapeHtml(rep.district)}${rep.province ? `, ${rep.province}` : ""}</p>
+        </div>
       </div>
-    </div>
-  `).join('');
+    `;
+  }).join('');
 }
-
 // ─── Show politician modal (only when clicked) ─────────────────────────────────
 window.showPoliticianModal = (name, party, district, province) => {
   const modalName = document.getElementById("modal-name");
