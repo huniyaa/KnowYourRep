@@ -92,10 +92,6 @@ async function fetchPoliticians(query = "", province = "", offset = 0) {
   
 }
 
-
-// ─── Update map markers with party colors ─────────────────────────────────────
-// ─── Update map markers with party-colored pins ─────────────────────────────────────
-// ─── Update map markers with party-colored default markers ───────────────────
 // ─── Update map markers with colored classic markers ─────────────────────────
 function updateMapMarkers(politicians) {
   if (!markersLayer || !map) return;
@@ -274,27 +270,27 @@ window.showPoliticianModal = (name, party, district, province) => {
   }
   
   // Add photo to modal header
-  const modalHeader = document.querySelector('.modal-header');
-  if (modalHeader) {
-    let existingPhoto = modalHeader.querySelector('.modal-photo');
-    if (!existingPhoto) {
-      const photoDiv = document.createElement('div');
-      photoDiv.className = 'modal-photo';
-      if (imageUrl) {
-        photoDiv.innerHTML = `<img src="${imageUrl}" alt="${escapeHtml(name)}" style="width: 60px; height: 60px; border-radius: 50%; object-fit: cover;">`;
-      } else {
-        photoDiv.innerHTML = `<div class="modal-initials" style="width: 60px; height: 60px; border-radius: 50%; background: #c0392b; color: white; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; font-weight: bold;">${getInitials(name)}</div>`;
-      }
-      modalHeader.insertBefore(photoDiv, modalHeader.firstChild);
+  // Add photo to modal header
+const modalHeader = document.querySelector('.modal-header');
+if (modalHeader) {
+  let existingPhoto = modalHeader.querySelector('.modal-photo');
+  if (!existingPhoto) {
+    const photoDiv = document.createElement('div');
+    photoDiv.className = 'modal-photo';
+    if (imageUrl) {
+      photoDiv.innerHTML = `<img src="${imageUrl}" alt="${escapeHtml(name)}" style="width: 60px; height: 60px; border-radius: 50%; object-fit: cover;">`;
     } else {
-      if (imageUrl) {
-        existingPhoto.innerHTML = `<img src="${imageUrl}" alt="${escapeHtml(name)}" style="width: 60px; height: 60px; border-radius: 50%; object-fit: cover;">`;
-      } else {
-        existingPhoto.innerHTML = `<div class="modal-initials" style="width: 60px; height: 60px; border-radius: 50%; background: #c0392b; color: white; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; font-weight: bold;">${getInitials(name)}</div>`;
-      }
+      photoDiv.innerHTML = `<div class="modal-initials">${getInitials(name)}</div>`;
+    }
+    modalHeader.insertBefore(photoDiv, modalHeader.firstChild);
+  } else {
+    if (imageUrl) {
+      existingPhoto.innerHTML = `<img src="${imageUrl}" alt="${escapeHtml(name)}" style="width: 60px; height: 60px; border-radius: 50%; object-fit: cover;">`;
+    } else {
+      existingPhoto.innerHTML = `<div class="modal-initials">${getInitials(name)}</div>`;
     }
   }
-  
+}
   if (modal) modal.style.display = 'flex';
   
   // Fetch quotes for this politician

@@ -982,3 +982,45 @@ blockquote footer {
 .learn-more-btn i {
   font-size: 12px;
 }
+
+/* Modal photo styling */
+.modal-photo {
+  margin-right: 16px;
+}
+
+.modal-photo img {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid #c0392b;
+}
+
+.modal-initials {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #c0392b, #e74c3c);
+  color: white;
+  font-size: 1.5rem;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  padding: 20px;
+  border-bottom: 2px solid #f0f0f0;
+  background: #fff5f5;
+  border-radius: 16px 16px 0 0;
+}
+
+.modal-header h2 {
+  color: #c0392b;
+  margin: 0;
+  font-size: 1.3rem;
+  flex: 1;
+}
