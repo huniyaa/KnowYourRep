@@ -22,6 +22,44 @@ let activeIndex = -1;
 let allReps = [];
 let map; // Store map reference
 
+function initScrollAnimation() {
+  const hero = document.getElementById('hero');
+  const appContent = document.getElementById('app-content');
+  const scrollIndicator = document.querySelector('.scroll-indicator');
+  
+  // Function to hide hero and show content
+  function revealContent() {
+    if (hero && appContent) {
+      hero.classList.add('hide-hero');
+      appContent.classList.remove('hidden');
+    }
+  }
+  
+  // Listen for scroll
+  window.addEventListener('scroll', () => {
+    if (window.scrollY > 50) {
+      revealContent();
+    }
+  });
+  
+  // Click on scroll indicator
+  if (scrollIndicator) {
+    scrollIndicator.addEventListener('click', (e) => {
+      e.preventDefault();
+      revealContent();
+      // Smooth scroll to content
+      window.scrollTo({
+        top: window.innerHeight,
+        behavior: 'smooth'
+      });
+    });
+  }
+  
+  // Also trigger if user has already scrolled
+  if (window.scrollY > 50) {
+    revealContent();
+  }
+}
 //Scroll 
 // Scroll animation and hero hide logic
 function initScrollAnimation() {
@@ -935,6 +973,7 @@ function renderPagination() {
 async function init() {
   // Initialize map
   map = initMap();
+  initScrollAnimation();  // <-- ADD THIS LINE
   
   // Make sure modal is hidden initially
   if (modal) {
