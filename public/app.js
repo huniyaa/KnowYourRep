@@ -157,17 +157,15 @@ if (provinceCenters[politician.province] &&
       iconAnchor: [12.5, 41]
     });
     
-    const popupContent = `
-      <div class="map-popup" onclick="window.showPoliticianModal('${escapeHtml(politician.name)}', '${escapeHtml(politician.party)}', '${escapeHtml(politician.district)}', '${escapeHtml(politician.province)}')">
-        <strong>${escapeHtml(politician.name)}</strong>
-        <div class="popup-party" style="color: ${markerColor}; font-weight: bold;">
-          ${escapeHtml(politician.party)}
-        </div>
-        <div class="popup-district">${escapeHtml(politician.district)}</div>
-        <div class="popup-district">${escapeHtml(politician.province)}</div>
-        ${!window.ridingCoords[politician.district] ? '<div class="popup-district" style="color: orange;">📍 Approximate location</div>' : ''}
-      </div>
-    `;
+   const popupContent = `
+  <div class="map-popup" onclick="window.showPoliticianModalWithData && window.showPoliticianModalWithData(${JSON.stringify(politician).replace(/"/g, '&quot;')})">
+    <strong>${escapeHtml(politician.name)}</strong>
+    <div class="popup-party" style="color: ${markerColor}; font-weight: bold;">
+      ${escapeHtml(politician.party)}
+    </div>
+    <div class="popup-district">${escapeHtml(politician.district)}</div>
+  </div>
+`;
     
     const marker = L.marker([coords.lat, coords.lng], { icon: coloredIcon })
       .bindPopup(popupContent);
@@ -216,12 +214,12 @@ if (document.readyState === 'loading') {
 function displayResults(politicians) {
   if (!resultsDiv) return;
   
-  resultsDiv.innerHTML = politicians.map(rep => {
-    // Get the image URL - use a default if none exists
+  resultsDiv.innerHTML = politicians.map((rep, index) => {
     const imageUrl = rep.image ? `https://api.openparliament.ca${rep.image}` : null;
+    const politicianId = `politician-${index}`;
     
     return `
-      <div class="card" onclick="window.showPoliticianModal('${escapeHtml(rep.name)}', '${escapeHtml(rep.party)}', '${escapeHtml(rep.district)}', '${escapeHtml(rep.province)}')">
+      <div class="card" data-politician-id="${politicianId}" data-name="${escapeHtml(rep.name)}" data-party="${escapeHtml(rep.party)}" data-district="${escapeHtml(rep.district)}" data-province="${escapeHtml(rep.province)}">
         <div class="avatar">
           ${imageUrl ? 
             `<img src="${imageUrl}" alt="${escapeHtml(rep.name)}" class="mp-photo" onerror="this.onerror=null; this.parentElement.innerHTML='${getInitials(rep.name)}';">` : 
@@ -236,6 +234,28 @@ function displayResults(politicians) {
       </div>
     `;
   }).join('');
+  
+  // Add click handlers to cards
+  document.querySelectorAll('.card').forEach(card => {
+    card.addEventListener('click', (e) => {
+      // Don't trigger if clicking on avatar image
+      if (e.target.tagName === 'IMG') return;
+      
+      const name = card.dataset.name;
+      const party = card.dataset.party;
+      const district = card.dataset.district;
+      const province = card.dataset.province;
+      
+      // Find the full politician object
+      const politician = politicians.find(p => p.name === name);
+      if (politician) {
+        showPoliticianModalWithData(politician);
+      } else {
+        // Fallback
+        window.showPoliticianModal(name, party, district, province);
+      }
+    });
+  });
 }
 // ─── Show politician modal (only when clicked) ─────────────────────────────────
 window.showPoliticianModal = (name, party, district, province) => {
@@ -301,6 +321,82 @@ if (modalHeader) {
   fetchQuotesForPolitician(name);
 };
   
+
+function showPoliticianModalWithData(politician) {
+  const name = politician.name;
+  const party = politician.party;
+  const district = politician.district;
+  const province = politician.province;
+  const imageUrl = politician.image ? `https://api.openparliament.ca${politician.image}` : null;
+  const slug = politician.slug;
+  
+  console.log('Showing modal for:', name);
+  console.log('Image URL:', imageUrl);
+  console.log('Slug:', slug);
+  
+  const modalName = document.getElementById("modal-name");
+  const modalParty = document.getElementById("modal-party");
+  const modalDistrict = document.getElementById("modal-district");
+  const modalProvince = document.getElementById("modal-province");
+  const modalQuotes = document.getElementById("modal-quotes-text");
+  const learnMoreLink = document.getElementById("modal-learn-more");
+  
+  if (modalName) modalName.textContent = name;
+  if (modalParty) modalParty.textContent = party;
+  if (modalDistrict) modalDistrict.textContent = district;
+  if (modalProvince) modalProvince.textContent = province;
+  if (modalQuotes) modalQuotes.innerHTML = '<div class="loading-spinner"><i class="fas fa-spinner fa-spin"></i> Loading speeches...</div>';
+  
+  // Set the learn more link
+  if (learnMoreLink) {
+    if (slug) {
+      learnMoreLink.href = `https://openparliament.ca/politicians/${slug}/`;
+    } else {
+      const fallbackSlug = name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+      learnMoreLink.href = `https://openparliament.ca/politicians/${fallbackSlug}/`;
+    }
+    learnMoreLink.style.display = 'inline-flex';
+  }
+  
+  // Add photo to the modal body
+  const modalBody = document.querySelector('.modal-body');
+  if (modalBody) {
+    let existingPhoto = document.getElementById('modal-politician-photo');
+    if (!existingPhoto) {
+      const photoDiv = document.createElement('div');
+      photoDiv.id = 'modal-politician-photo';
+      photoDiv.style.cssText = 'text-align: center; margin-bottom: 20px;';
+      if (imageUrl) {
+        photoDiv.innerHTML = `<img src="${imageUrl}" alt="${escapeHtml(name)}" style="width: 100px; height: 100px; border-radius: 50%; object-fit: cover; border: 3px solid #c0392b;">`;
+      } else {
+        photoDiv.innerHTML = `<div class="modal-initials" style="width: 100px; height: 100px; border-radius: 50%; background: #c0392b; color: white; display: flex; align-items: center; justify-content: center; margin: 0 auto; font-size: 2rem; font-weight: bold;">${getInitials(name)}</div>`;
+      }
+      modalBody.insertBefore(photoDiv, modalBody.firstChild);
+    } else if (imageUrl) {
+      existingPhoto.innerHTML = `<img src="${imageUrl}" alt="${escapeHtml(name)}" style="width: 100px; height: 100px; border-radius: 50%; object-fit: cover; border: 3px solid #c0392b;">`;
+    } else {
+      existingPhoto.innerHTML = `<div class="modal-initials" style="width: 100px; height: 100px; border-radius: 50%; background: #c0392b; color: white; display: flex; align-items: center; justify-content: center; margin: 0 auto; font-size: 2rem; font-weight: bold;">${getInitials(name)}</div>`;
+    }
+  }
+  
+  if (modal) modal.style.display = 'flex';
+  
+  // Fetch quotes for this politician
+  fetchQuotesForPolitician(name);
+}
+
+// Keep the original for backward compatibility
+window.showPoliticianModal = (name, party, district, province) => {
+  // Try to find the full politician object
+  const politician = allReps.find(p => p.name === name);
+  if (politician) {
+    showPoliticianModalWithData(politician);
+  } else {
+    // Fallback without image
+    console.log('Politician not found in allReps, using fallback');
+    // ... fallback code
+  }
+};
 
 async function fetchQuotesForPolitician(name) {
   const modalQuotes = document.getElementById("modal-quotes-text");
