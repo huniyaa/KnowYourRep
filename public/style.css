@@ -374,10 +374,6 @@ body {
 }
 
 
-/* Or use a consistent warm orange-red */
-.party {
-  color: #e67e22;
-}
 
 /* Alternatively, keep original colors but slightly desaturated */
 .party[data-party="Liberal"] { color: #c0392b; }        /* Original red */
