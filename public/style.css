@@ -646,3 +646,40 @@ blockquote footer {
   color: #666;
   margin: 2px 0;
 }
+
+/* Custom marker styles */
+.custom-marker {
+  background: transparent;
+  border: none;
+}
+
+.custom-marker div:hover {
+  transform: scale(1.2);
+  transition: transform 0.2s ease;
+}
+
+/* Map popup styles */
+.map-popup {
+  cursor: pointer;
+  padding: 4px;
+  min-width: 180px;
+}
+
+.map-popup strong {
+  font-size: 14px;
+  display: block;
+  margin-bottom: 6px;
+  color: #1a202c;
+}
+
+.popup-party {
+  font-weight: bold;
+  margin: 4px 0;
+  font-size: 12px;
+}
+
+.popup-district {
+  font-size: 11px;
+  color: #666;
+  margin: 2px 0;
+}

@@ -93,16 +93,27 @@ function updateMapMarkers(politicians) {
   
   markersLayer.clearLayers();
   const bounds = [];
+  let markersAdded = 0;
+  let fallbackUsed = 0;
   
   politicians.forEach(politician => {
-    // Get coordinates
+    // Get coordinates using the new function
     let coords = window.getRidingCoordinates 
       ? window.getRidingCoordinates(politician.district, politician.province)
       : (window.ridingCoords && window.ridingCoords[politician.district]);
     
-    if (!coords) return;
+    if (!coords) {
+      console.log(`No coordinates for: ${politician.district}`);
+      return;
+    }
     
-    // Get party color
+    // Track if we're using a fallback (province center)
+    if (!window.ridingCoords[politician.district]) {
+      fallbackUsed++;
+    }
+    markersAdded++;
+    
+    // Get party color using the new function
     const markerColor = window.getMarkerColor 
       ? window.getMarkerColor(politician.party) 
       : "#c0392b";
@@ -118,6 +129,7 @@ function updateMapMarkers(politicians) {
         border: 2px solid white;
         box-shadow: 0 2px 4px rgba(0,0,0,0.3);
         transition: transform 0.2s;
+        cursor: pointer;
       "></div>`,
       iconSize: [24, 24],
       popupAnchor: [0, -12]
@@ -131,6 +143,7 @@ function updateMapMarkers(politicians) {
         </div>
         <div class="popup-district">${escapeHtml(politician.district)}</div>
         <div class="popup-district">${escapeHtml(politician.province)}</div>
+        ${!window.ridingCoords[politician.district] ? '<div class="popup-district" style="color: orange;">📍 Approximate location</div>' : ''}
       </div>
     `;
     
@@ -144,6 +157,8 @@ function updateMapMarkers(politicians) {
   if (bounds.length > 0 && map) {
     map.fitBounds(bounds, { padding: [40, 40] });
   }
+  
+  console.log(`Map updated: ${markersAdded} markers added, ${fallbackUsed} using approximate locations`);
 }
 
 // ─── Display results cards ────────────────────────────────────────────────────
