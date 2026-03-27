@@ -335,4 +335,37 @@ const ridingCoords = {
   "Madawaska—Restigouche": { lat: 47.524, lng: -67.742 },
   "Miramichi—Grand Lake": { lat: 46.571, lng: -65.373 },
   "Moncton—Riverview—Dieppe": { lat: 46.094, lng: -64.781 },
+  "New Brunswick Southwest": { lat: 45.457, lng: -66.914 },
+  "Saint John—Rothesay": { lat: 45.316, lng: -66.059 },
+  "Tobique—Mactaquac": { lat: 46.573, lng: -67.386 },
+  
+  // ============= NEWFOUNDLAND AND LABRADOR (7 ridings) =============
+  "Avalon": { lat: 47.544, lng: -53.129 },
+  "Bonavista—Burin—Trinity": { lat: 48.307, lng: -53.853 },
+  "Coast of Bays—Central—Notre Dame": { lat: 49.026, lng: -55.390 },
+  "Labrador": { lat: 53.314, lng: -60.411 },
+  "Long Range Mountains": { lat: 49.109, lng: -57.684 },
+  "St. John's East": { lat: 47.566, lng: -52.713 },
+  "St. John's South—Mount Pearl": { lat: 47.514, lng: -52.779 },
+  
+  // ============= PRINCE EDWARD ISLAND (4 ridings) =============
+  "Cardigan": { lat: 46.221, lng: -62.566 },
+  "Charlottetown": { lat: 46.238, lng: -63.130 },
+  "Egmont": { lat: 46.589, lng: -64.125 },
+  "Malpeque": { lat: 46.493, lng: -63.549 },
+  
+  // ============= TERRITORIES (3 ridings) =============
+  "Northwest Territories": { lat: 64.825, lng: -124.845 },
+  "Nunavut": { lat: 70.299, lng: -83.107 },
+  "Yukon": { lat: 63.626, lng: -135.168 }
+};
+
+// Make it globally available
+if (typeof window !== 'undefined') {
+  window.ridingCoords = ridingCoords;
+}
+
+// Export for Node.js
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = ridingCoords;
 }
