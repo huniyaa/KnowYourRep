@@ -768,3 +768,43 @@ body {
     padding: 8px 12px;
   }
 }
+/* Marker styles */
+.colored-marker {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+}
+
+.colored-marker div {
+  transition: transform 0.2s ease;
+}
+
+.colored-marker:hover div {
+  transform: scale(1.2);
+}
+
+/* Map popup styles */
+.map-popup {
+  cursor: pointer;
+  padding: 8px;
+  min-width: 160px;
+}
+
+.map-popup strong {
+  font-size: 14px;
+  display: block;
+  margin-bottom: 4px;
+  color: #1a202c;
+}
+
+.popup-party {
+  font-size: 12px;
+  font-weight: bold;
+  margin: 4px 0;
+}
+
+.popup-district {
+  font-size: 11px;
+  color: #666;
+  margin-top: 4px;
+}

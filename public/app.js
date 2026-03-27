@@ -129,12 +129,18 @@ function initMap() {
     attribution: "© OpenStreetMap contributors"
   }).addTo(newMap);
   
-  // Create markers layer
-  markersLayer = L.layerGroup().addTo(newMap);
+  // CHANGE THIS: Use marker cluster group instead of regular layer
+  markersLayer = L.markerClusterGroup({
+    maxClusterRadius: 50,
+    spiderfyOnMaxZoom: true,
+    showCoverageOnHover: false,
+    zoomToBoundsOnClick: true,
+    disableClusteringAtZoom: 12
+  }).addTo(newMap);
   
   return newMap;
-  
 }
+
 // Add clear button handler
 const clearBtn = document.getElementById('clear-results-btn');
 if (clearBtn) {
@@ -191,38 +197,19 @@ async function fetchPoliticians(query = "", province = "", offset = 0) {
 function updateMapMarkers(politicians) {
   if (!markersLayer || !map) return;
   
+  // Clear existing markers
   markersLayer.clearLayers();
+  const markers = [];
   const bounds = [];
   let markersAdded = 0;
-  let fallbackUsed = 0;
   
   politicians.forEach(politician => {
-    // This will now use your complete coordinates file
     let coords = window.getRidingCoordinates 
       ? window.getRidingCoordinates(politician.district, politician.province)
       : (window.ridingCoords && window.ridingCoords[politician.district]);
     
-    if (!coords) {
-      console.log(`No coordinates for: ${politician.district}`);
-      return;
-    }
-
-    // Add this debug code inside updateMapMarkers, right after getting coords
-if (!coords) {
-  console.log(`❌ NO COORDS for: ${politician.district} (${politician.province})`);
-  return;
-}
-
-// Log when using province center fallback
-if (provinceCenters[politician.province] && 
-    coords.lat === provinceCenters[politician.province].lat && 
-    coords.lng === provinceCenters[politician.province].lng) {
-  console.log(`📍 Using province center for: ${politician.district} (${politician.province})`);
-}
+    if (!coords) return;
     
-    if (!window.ridingCoords[politician.district]) {
-      fallbackUsed++;
-    }
     markersAdded++;
     
     // Get party color
@@ -235,45 +222,48 @@ if (provinceCenters[politician.province] &&
       else if (politician.party.includes("Bloc")) markerColor = "#00b5e2";
     }
     
-    // Create colored pin marker
+    // Create colored marker
     const coloredIcon = L.divIcon({
       className: 'colored-marker',
-      html: `<div style="position: relative; width: 25px; height: 41px;">
-        <svg width="25" height="41" viewBox="0 0 25 41" xmlns="http://www.w3.org/2000/svg">
-          <path d="M12.5 0C5.6 0 0 5.6 0 12.5C0 21.9 12.5 41 12.5 41C12.5 41 25 21.9 25 12.5C25 5.6 19.4 0 12.5 0Z" 
-                fill="${markerColor}" 
-                stroke="white" 
-                stroke-width="1.5"/>
-          <circle cx="12.5" cy="12.5" r="3.5" fill="white"/>
-        </svg>
-      </div>`,
-      iconSize: [25, 41],
-      popupAnchor: [0, -20],
-      iconAnchor: [12.5, 41]
+      html: `<div style="
+        background-color: ${markerColor};
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        border: 2px solid white;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        transition: transform 0.2s;
+        cursor: pointer;
+      "></div>`,
+      iconSize: [24, 24],
+      popupAnchor: [0, -12]
     });
     
-   const popupContent = `
-  <div class="map-popup" onclick="window.showPoliticianModalWithData && window.showPoliticianModalWithData(${JSON.stringify(politician).replace(/"/g, '&quot;')})">
-    <strong>${escapeHtml(politician.name)}</strong>
-    <div class="popup-party" style="color: ${markerColor}; font-weight: bold;">
-      ${escapeHtml(politician.party)}
-    </div>
-    <div class="popup-district">${escapeHtml(politician.district)}</div>
-  </div>
-`;
+    const popupContent = `
+      <div class="map-popup" onclick="window.showPoliticianModal('${escapeHtml(politician.name)}', '${escapeHtml(politician.party)}', '${escapeHtml(politician.district)}', '${escapeHtml(politician.province)}')">
+        <strong>${escapeHtml(politician.name)}</strong>
+        <div class="popup-party" style="color: ${markerColor}; font-weight: bold;">
+          ${escapeHtml(politician.party)}
+        </div>
+        <div class="popup-district">${escapeHtml(politician.district)}</div>
+      </div>
+    `;
     
     const marker = L.marker([coords.lat, coords.lng], { icon: coloredIcon })
       .bindPopup(popupContent);
     
-    markersLayer.addLayer(marker);
+    markers.push(marker);
     bounds.push([coords.lat, coords.lng]);
   });
+  
+  // Add all markers to the cluster group at once (faster)
+  markersLayer.addLayers(markers);
   
   if (bounds.length > 0 && map) {
     map.fitBounds(bounds, { padding: [40, 40] });
   }
   
-  console.log(`Map updated: ${markersAdded} markers added, ${fallbackUsed} using fallback coordinates`);
+  console.log(`Map updated: ${markersAdded} markers added`);
 }
 
 function initQuickFilters() {
@@ -971,9 +961,16 @@ function renderPagination() {
 
 // ─── Load initial data and setup ──────────────────────────────────────────────
 async function init() {
+  // Show loading state for map
+  const mapElement = document.getElementById('map');
+  if (mapElement) {
+    mapElement.style.opacity = '0.5';
+  }
+  
+  // Initialize scroll animation
+  initScrollAnimation();
+  
   // Initialize map
-  map = initMap();
-  initScrollAnimation();  // <-- ADD THIS LINE
   map = initMap();
   
   // Make sure modal is hidden initially
@@ -991,7 +988,12 @@ async function init() {
   }
   
   // Initial fetch
-  fetchPoliticians();
+  await fetchPoliticians();
+  
+  // Map is now loaded
+  if (mapElement) {
+    mapElement.style.opacity = '1';
+  }
 }
 
 // Wait for DOM to be fully loaded before initializing
