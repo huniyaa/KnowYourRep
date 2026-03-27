@@ -243,6 +243,10 @@ window.showPoliticianModal = (name, party, district, province) => {
   const imageUrl = politician?.image ? `https://api.openparliament.ca${politician.image}` : null;
   const slug = politician?.slug; // <-- THIS IS WHERE const slug GOES
 
+  console.log('Politician:', name);
+  console.log('Image URL:', imageUrl);
+  console.log('Slug:', slug);
+
   const modalName = document.getElementById("modal-name");
   const modalParty = document.getElementById("modal-party");
   const modalDistrict = document.getElementById("modal-district");
