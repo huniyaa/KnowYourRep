@@ -291,7 +291,7 @@ async function fetchQuotesForPolitician(name) {
   if (!modalQuotes) return;
   
   try {
-    // Call your own API endpoint instead of OpenParliament directly
+    // THIS IS THE KEY CHANGE - call YOUR API, not OpenParliament directly
     const response = await fetch(`/api/quotes?politician=${encodeURIComponent(name)}`);
     
     if (!response.ok) throw new Error("Failed to fetch statements");
