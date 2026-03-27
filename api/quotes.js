@@ -1,5 +1,4 @@
 export default async function handler(req, res) {
-  // Set CORS headers
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
@@ -17,8 +16,8 @@ export default async function handler(req, res) {
     
     console.log(`Searching for politician: ${politician}`);
     
-    // Step 1: Find the politician's exact URL
-    const searchUrl = `https://api.openparliament.ca/politicians/?format=json&limit=10&name=${encodeURIComponent(politician)}`;
+    // Search with a broader query first
+    const searchUrl = `https://api.openparliament.ca/politicians/?format=json&limit=20`;
     const searchResponse = await fetch(searchUrl);
     
     if (!searchResponse.ok) {
@@ -29,24 +28,46 @@ export default async function handler(req, res) {
     const searchData = await searchResponse.json();
     
     if (!searchData.objects || searchData.objects.length === 0) {
-      console.log(`No politician found: ${politician}`);
+      console.log(`No politicians found`);
       return res.status(200).json({ objects: [] });
     }
     
-    // Find exact match or best match
+    // Log all politicians for debugging
+    console.log(`Found ${searchData.objects.length} politicians total`);
+    
+    // Try to find exact match
     let politicianData = searchData.objects.find(p => 
       p.name.toLowerCase() === politician.toLowerCase()
     );
     
+    // If no exact match, try partial match
     if (!politicianData) {
-      politicianData = searchData.objects[0];
-      console.log(`Using closest match: ${politicianData.name}`);
+      const searchName = politician.toLowerCase().split(' ');
+      politicianData = searchData.objects.find(p => {
+        const pName = p.name.toLowerCase();
+        return searchName.every(part => pName.includes(part));
+      });
+    }
+    
+    // If still no match, try first name + last name
+    if (!politicianData) {
+      const [firstName, lastName] = politician.toLowerCase().split(' ');
+      politicianData = searchData.objects.find(p => {
+        const pName = p.name.toLowerCase();
+        return pName.includes(firstName) && pName.includes(lastName);
+      });
+    }
+    
+    if (!politicianData) {
+      console.log(`No match found for: ${politician}`);
+      console.log(`Available politicians: ${searchData.objects.slice(0, 10).map(p => p.name).join(', ')}`);
+      return res.status(200).json({ objects: [] });
     }
     
     const politicianUrl = politicianData.url;
     console.log(`Found politician: ${politicianData.name}, URL: ${politicianUrl}`);
     
-    // Step 2: Fetch their statements
+    // Fetch their statements
     const statementsUrl = `${politicianUrl}statements/?format=json&limit=10`;
     const statementsResponse = await fetch(statementsUrl);
     
