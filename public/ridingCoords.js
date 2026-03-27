@@ -1,10 +1,15 @@
-// Complete Canadian Electoral District Coordinates
-// Source: Approximate center coordinates for each riding
+// This file contains coordinates for Canadian electoral districts
+// All district names should match EXACTLY what the OpenParliament API returns
+
 const ridingCoords = {
-  // ============= ALBERTA (34 ridings) =============
-  "Banff—Airdrie": { lat: 51.178, lng: -114.912 },
-  "Battle River—Crowfoot": { lat: 52.031, lng: -112.321 },
-  "Bow River": { lat: 50.415, lng: -112.649 },
+  // ============= ALBERTA =============
+  "Edmonton Manning": { lat: 53.576, lng: -113.403 },
+  "Edmonton Centre": { lat: 53.542, lng: -113.493 },
+  "Edmonton Griesbach": { lat: 53.587, lng: -113.482 },
+  "Edmonton Mill Woods": { lat: 53.457, lng: -113.426 },
+  "Edmonton Riverbend": { lat: 53.457, lng: -113.556 },
+  "Edmonton Strathcona": { lat: 53.520, lng: -113.431 },
+  "Edmonton West": { lat: 53.528, lng: -113.617 },
   "Calgary Centre": { lat: 51.048, lng: -114.071 },
   "Calgary Confederation": { lat: 51.075, lng: -114.126 },
   "Calgary Forest Lawn": { lat: 51.043, lng: -113.951 },
@@ -16,14 +21,9 @@ const ridingCoords = {
   "Calgary Shepard": { lat: 50.936, lng: -113.959 },
   "Calgary Signal Hill": { lat: 51.015, lng: -114.179 },
   "Calgary Skyview": { lat: 51.134, lng: -113.985 },
-  "Edmonton Centre": { lat: 53.542, lng: -113.493 },
-  "Edmonton Griesbach": { lat: 53.587, lng: -113.482 },
-  "Edmonton Manning": { lat: 53.576, lng: -113.403 },
-  "Edmonton Mill Woods": { lat: 53.457, lng: -113.426 },
-  "Edmonton Riverbend": { lat: 53.457, lng: -113.556 },
-  "Edmonton Strathcona": { lat: 53.520, lng: -113.431 },
-  "Edmonton West": { lat: 53.528, lng: -113.617 },
-  "Edmonton—Wetaskiwin": { lat: 53.148, lng: -113.824 },
+  "Banff—Airdrie": { lat: 51.178, lng: -114.912 },
+  "Battle River—Crowfoot": { lat: 52.031, lng: -112.321 },
+  "Bow River": { lat: 50.415, lng: -112.649 },
   "Foothills": { lat: 50.256, lng: -113.825 },
   "Fort McMurray—Cold Lake": { lat: 55.452, lng: -111.398 },
   "Grande Prairie—Mackenzie": { lat: 55.226, lng: -118.787 },
@@ -37,335 +37,177 @@ const ridingCoords = {
   "St. Albert—Edmonton": { lat: 53.680, lng: -113.605 },
   "Yellowhead": { lat: 53.558, lng: -116.429 },
   
-  // ============= BRITISH COLUMBIA (42 ridings) =============
-  "Abbotsford": { lat: 49.052, lng: -122.317 },
-  "Burnaby North—Seymour": { lat: 49.282, lng: -122.988 },
-  "Burnaby South": { lat: 49.243, lng: -122.978 },
-  "Cariboo—Prince George": { lat: 53.394, lng: -122.743 },
-  "Central Okanagan—Similkameen—Nicola": { lat: 49.884, lng: -120.112 },
-  "Chilliwack—Hope": { lat: 49.344, lng: -121.670 },
-  "Cloverdale—Langley City": { lat: 49.108, lng: -122.689 },
-  "Coquitlam—Port Coquitlam": { lat: 49.258, lng: -122.783 },
-  "Courtenay—Alberni": { lat: 49.467, lng: -125.124 },
-  "Cowichan—Malahat—Langford": { lat: 48.780, lng: -124.125 },
-  "Delta": { lat: 49.079, lng: -123.044 },
-  "Esquimalt—Saanich—Sooke": { lat: 48.466, lng: -123.570 },
-  "Fleetwood—Port Kells": { lat: 49.155, lng: -122.791 },
-  "Kamloops—Thompson—Cariboo": { lat: 51.263, lng: -120.325 },
-  "Kelowna—Lake Country": { lat: 49.982, lng: -119.437 },
-  "Kootenay—Columbia": { lat: 50.038, lng: -116.522 },
-  "Langley—Aldergrove": { lat: 49.077, lng: -122.516 },
-  "Mission—Matsqui—Fraser Canyon": { lat: 49.221, lng: -122.217 },
-  "Nanaimo—Ladysmith": { lat: 49.153, lng: -123.984 },
-  "New Westminster—Burnaby": { lat: 49.220, lng: -122.931 },
-  "North Island—Powell River": { lat: 50.159, lng: -126.033 },
-  "North Okanagan—Shuswap": { lat: 50.835, lng: -119.200 },
-  "North Vancouver": { lat: 49.345, lng: -123.065 },
-  "Pitt Meadows—Maple Ridge": { lat: 49.264, lng: -122.640 },
-  "Port Moody—Coquitlam": { lat: 49.291, lng: -122.853 },
-  "Prince George—Peace River—Northern Rockies": { lat: 55.861, lng: -122.239 },
-  "Richmond Centre": { lat: 49.167, lng: -123.140 },
-  "Saanich—Gulf Islands": { lat: 48.727, lng: -123.429 },
-  "Similkameen—South Okanagan—West Kootenay": { lat: 49.538, lng: -119.614 },
-  "Skeena—Bulkley Valley": { lat: 54.911, lng: -127.513 },
-  "South Okanagan—West Kootenay": { lat: 49.450, lng: -119.600 },
-  "South Surrey—White Rock": { lat: 49.043, lng: -122.801 },
-  "Steveston—Richmond East": { lat: 49.141, lng: -123.101 },
-  "Surrey Centre": { lat: 49.184, lng: -122.846 },
-  "Surrey—Newton": { lat: 49.121, lng: -122.855 },
-  "Vancouver Centre": { lat: 49.280, lng: -123.121 },
+  // ============= BRITISH COLUMBIA =============
   "Vancouver East": { lat: 49.279, lng: -123.066 },
+  "Vancouver Centre": { lat: 49.280, lng: -123.121 },
   "Vancouver Granville": { lat: 49.257, lng: -123.131 },
   "Vancouver Kingsway": { lat: 49.253, lng: -123.072 },
   "Vancouver Quadra": { lat: 49.262, lng: -123.170 },
   "Vancouver South": { lat: 49.218, lng: -123.094 },
+  "Burnaby North—Seymour": { lat: 49.282, lng: -122.988 },
+  "Burnaby South": { lat: 49.243, lng: -122.978 },
+  "Surrey Centre": { lat: 49.184, lng: -122.846 },
+  "Surrey—Newton": { lat: 49.121, lng: -122.855 },
+  "Richmond Centre": { lat: 49.167, lng: -123.140 },
   "Victoria": { lat: 48.428, lng: -123.365 },
+  "Saanich—Gulf Islands": { lat: 48.727, lng: -123.429 },
+  "North Vancouver": { lat: 49.345, lng: -123.065 },
   "West Vancouver—Sunshine Coast—Sea to Sky Country": { lat: 49.718, lng: -123.158 },
+  "Abbotsford": { lat: 49.052, lng: -122.317 },
+  "Chilliwack—Hope": { lat: 49.344, lng: -121.670 },
+  "Kelowna—Lake Country": { lat: 49.982, lng: -119.437 },
+  "Kamloops—Thompson—Cariboo": { lat: 51.263, lng: -120.325 },
+  "Prince George—Peace River—Northern Rockies": { lat: 55.861, lng: -122.239 },
+  "Cariboo—Prince George": { lat: 53.394, lng: -122.743 },
+  "Skeena—Bulkley Valley": { lat: 54.911, lng: -127.513 },
+  "North Island—Powell River": { lat: 50.159, lng: -126.033 },
+  "Courtenay—Alberni": { lat: 49.467, lng: -125.124 },
+  "Nanaimo—Ladysmith": { lat: 49.153, lng: -123.984 },
+  "Cowichan—Malahat—Langford": { lat: 48.780, lng: -124.125 },
+  "Esquimalt—Saanich—Sooke": { lat: 48.466, lng: -123.570 },
   
-  // ============= ONTARIO (121 ridings - sample of major ones) =============
-  "Ajax": { lat: 43.858, lng: -79.023 },
-  "Algoma—Manitoulin—Kapuskasing": { lat: 47.673, lng: -83.591 },
-  "Aurora—Oak Ridges—Richmond Hill": { lat: 43.918, lng: -79.468 },
-  "Barrie—Innisfil": { lat: 44.364, lng: -79.659 },
-  "Barrie—Springwater—Oro-Medonte": { lat: 44.417, lng: -79.746 },
-  "Bay of Quinte": { lat: 44.165, lng: -77.381 },
-  "Beaches—East York": { lat: 43.678, lng: -79.293 },
-  "Brampton Centre": { lat: 43.697, lng: -79.761 },
-  "Brampton East": { lat: 43.737, lng: -79.687 },
-  "Brampton North": { lat: 43.724, lng: -79.771 },
-  "Brampton South": { lat: 43.655, lng: -79.769 },
-  "Brampton West": { lat: 43.681, lng: -79.832 },
-  "Brantford—Brant": { lat: 43.139, lng: -80.314 },
-  "Bruce—Grey—Owen Sound": { lat: 44.420, lng: -80.909 },
-  "Burlington": { lat: 43.352, lng: -79.785 },
-  "Cambridge": { lat: 43.402, lng: -80.313 },
-  "Carleton": { lat: 45.243, lng: -75.807 },
-  "Chatham-Kent—Leamington": { lat: 42.260, lng: -82.203 },
-  "Davenport": { lat: 43.663, lng: -79.438 },
-  "Don Valley East": { lat: 43.747, lng: -79.327 },
-  "Don Valley North": { lat: 43.788, lng: -79.379 },
-  "Don Valley West": { lat: 43.719, lng: -79.378 },
-  "Dufferin—Caledon": { lat: 43.936, lng: -80.087 },
-  "Durham": { lat: 44.003, lng: -78.946 },
-  "Eglinton—Lawrence": { lat: 43.722, lng: -79.419 },
-  "Elgin—Middlesex—London": { lat: 42.866, lng: -81.219 },
-  "Essex": { lat: 42.087, lng: -82.757 },
-  "Etobicoke Centre": { lat: 43.650, lng: -79.543 },
-  "Etobicoke—Lakeshore": { lat: 43.596, lng: -79.524 },
-  "Etobicoke North": { lat: 43.705, lng: -79.575 },
-  "Flamborough—Glanbrook": { lat: 43.227, lng: -79.843 },
-  "Glengarry—Prescott—Russell": { lat: 45.392, lng: -74.982 },
-  "Guelph": { lat: 43.545, lng: -80.249 },
-  "Haldimand—Norfolk": { lat: 42.884, lng: -80.156 },
-  "Haliburton—Kawartha Lakes—Brock": { lat: 44.641, lng: -78.689 },
-  "Hamilton Centre": { lat: 43.256, lng: -79.869 },
-  "Hamilton East—Stoney Creek": { lat: 43.225, lng: -79.762 },
-  "Hamilton Mountain": { lat: 43.212, lng: -79.857 },
-  "Hamilton West—Ancaster—Dundas": { lat: 43.244, lng: -79.941 },
-  "Hastings—Lennox and Addington": { lat: 44.896, lng: -77.379 },
-  "Humber River—Black Creek": { lat: 43.712, lng: -79.497 },
-  "Huron—Bruce": { lat: 43.943, lng: -81.466 },
-  "Kanata—Carleton": { lat: 45.311, lng: -75.924 },
-  "Kenora": { lat: 51.008, lng: -93.792 },
-  "King—Vaughan": { lat: 43.934, lng: -79.580 },
-  "Kingston and the Islands": { lat: 44.231, lng: -76.481 },
-  "Kitchener Centre": { lat: 43.450, lng: -80.479 },
-  "Kitchener—Conestoga": { lat: 43.508, lng: -80.615 },
-  "Kitchener South—Hespeler": { lat: 43.425, lng: -80.382 },
-  "Lambton—Kent—Middlesex": { lat: 42.832, lng: -82.091 },
-  "Lanark—Frontenac—Kingston": { lat: 44.917, lng: -76.358 },
-  "Leeds—Grenville—Thousand Islands and Rideau Lakes": { lat: 44.792, lng: -75.901 },
-  "London—Fanshawe": { lat: 43.016, lng: -81.208 },
-  "London North Centre": { lat: 43.002, lng: -81.252 },
-  "London West": { lat: 42.959, lng: -81.308 },
-  "Markham—Stouffville": { lat: 43.954, lng: -79.273 },
-  "Markham—Thornhill": { lat: 43.829, lng: -79.403 },
-  "Markham—Unionville": { lat: 43.857, lng: -79.306 },
-  "Milton": { lat: 43.518, lng: -79.881 },
-  "Mississauga Centre": { lat: 43.581, lng: -79.647 },
-  "Mississauga East—Cooksville": { lat: 43.591, lng: -79.601 },
-  "Mississauga—Erin Mills": { lat: 43.533, lng: -79.688 },
-  "Mississauga—Lakeshore": { lat: 43.550, lng: -79.593 },
-  "Mississauga—Malton": { lat: 43.708, lng: -79.654 },
-  "Mississauga—Streetsville": { lat: 43.587, lng: -79.721 },
-  "Nepean": { lat: 45.312, lng: -75.789 },
-  "Newmarket—Aurora": { lat: 44.050, lng: -79.461 },
-  "Niagara Centre": { lat: 43.077, lng: -79.258 },
-  "Niagara Falls": { lat: 43.082, lng: -79.090 },
-  "Niagara West": { lat: 43.160, lng: -79.526 },
-  "Nickel Belt": { lat: 46.469, lng: -81.197 },
-  "Nipissing—Timiskaming": { lat: 46.474, lng: -79.448 },
-  "Northumberland—Peterborough South": { lat: 44.216, lng: -78.153 },
-  "Oakville": { lat: 43.448, lng: -79.665 },
-  "Oakville North—Burlington": { lat: 43.424, lng: -79.748 },
-  "Orléans": { lat: 45.466, lng: -75.484 },
-  "Oshawa": { lat: 43.915, lng: -78.859 },
+  // ============= ONTARIO (Major ones to start) =============
+  "Toronto Centre": { lat: 43.653, lng: -79.383 },
+  "Toronto—Danforth": { lat: 43.681, lng: -79.352 },
+  "Toronto—St. Paul's": { lat: 43.675, lng: -79.396 },
   "Ottawa Centre": { lat: 45.410, lng: -75.702 },
   "Ottawa South": { lat: 45.363, lng: -75.682 },
   "Ottawa—Vanier": { lat: 45.431, lng: -75.668 },
-  "Ottawa West—Nepean": { lat: 45.344, lng: -75.805 },
-  "Oxford": { lat: 43.074, lng: -80.793 },
-  "Parkdale—High Park": { lat: 43.654, lng: -79.455 },
-  "Parry Sound—Muskoka": { lat: 45.365, lng: -79.715 },
-  "Perth—Wellington": { lat: 43.585, lng: -80.804 },
-  "Peterborough—Kawartha": { lat: 44.477, lng: -78.301 },
-  "Pickering—Uxbridge": { lat: 43.960, lng: -79.085 },
-  "Renfrew—Nipissing—Pembroke": { lat: 45.817, lng: -77.399 },
-  "Richmond Hill": { lat: 43.881, lng: -79.437 },
-  "St. Catharines": { lat: 43.165, lng: -79.245 },
-  "St. Paul's": { lat: 43.674, lng: -79.396 },
-  "Sarnia—Lambton": { lat: 42.980, lng: -82.227 },
-  "Sault Ste. Marie": { lat: 46.537, lng: -84.328 },
-  "Scarborough—Agincourt": { lat: 43.792, lng: -79.269 },
-  "Scarborough Centre": { lat: 43.763, lng: -79.265 },
-  "Scarborough—Guildwood": { lat: 43.759, lng: -79.210 },
-  "Scarborough North": { lat: 43.808, lng: -79.272 },
-  "Scarborough—Rouge Park": { lat: 43.817, lng: -79.184 },
-  "Scarborough Southwest": { lat: 43.717, lng: -79.268 },
-  "Simcoe—Grey": { lat: 44.412, lng: -80.393 },
-  "Simcoe North": { lat: 44.661, lng: -79.760 },
-  "Spadina—Harbord": { lat: 43.656, lng: -79.411 },
-  "Stormont—Dundas—South Glengarry": { lat: 45.147, lng: -74.881 },
+  "Hamilton Centre": { lat: 43.256, lng: -79.869 },
+  "London North Centre": { lat: 43.002, lng: -81.252 },
+  "Kitchener Centre": { lat: 43.450, lng: -80.479 },
+  "Mississauga Centre": { lat: 43.581, lng: -79.647 },
+  "Brampton Centre": { lat: 43.697, lng: -79.761 },
+  "Markham—Unionville": { lat: 43.857, lng: -79.306 },
+  "Oakville": { lat: 43.448, lng: -79.665 },
+  "Burlington": { lat: 43.352, lng: -79.785 },
+  "Oshawa": { lat: 43.915, lng: -78.859 },
+  "Barrie—Innisfil": { lat: 44.364, lng: -79.659 },
+  "Kingston and the Islands": { lat: 44.231, lng: -76.481 },
   "Sudbury": { lat: 46.490, lng: -81.012 },
-  "Thornhill": { lat: 43.815, lng: -79.425 },
   "Thunder Bay—Rainy River": { lat: 48.644, lng: -91.433 },
-  "Thunder Bay—Superior North": { lat: 48.600, lng: -88.587 },
-  "Timmins—James Bay": { lat: 49.731, lng: -83.437 },
-  "Toronto Centre": { lat: 43.653, lng: -79.380 },
-  "Toronto—Danforth": { lat: 43.681, lng: -79.352 },
-  "Toronto—St. Paul's": { lat: 43.675, lng: -79.396 },
-  "University—Rosedale": { lat: 43.672, lng: -79.392 },
-  "Vaughan—Woodbridge": { lat: 43.800, lng: -79.597 },
-  "Waterloo": { lat: 43.459, lng: -80.539 },
-  "Wellington—Halton Hills": { lat: 43.649, lng: -80.122 },
-  "Whitby": { lat: 43.874, lng: -78.942 },
-  "Willowdale": { lat: 43.774, lng: -79.406 },
   "Windsor—Tecumseh": { lat: 42.319, lng: -82.887 },
-  "Windsor West": { lat: 42.284, lng: -83.049 },
-  "York Centre": { lat: 43.761, lng: -79.473 },
-  "York—Simcoe": { lat: 44.072, lng: -79.623 },
-  "York South—Weston": { lat: 43.698, lng: -79.495 },
+  "Niagara Falls": { lat: 43.082, lng: -79.090 },
+  "Guelph": { lat: 43.545, lng: -80.249 },
+  "Waterloo": { lat: 43.459, lng: -80.539 },
   
-  // ============= QUEBEC (78 ridings - sample) =============
-  "Abitibi—Baie-James—Nunavik—Eeyou": { lat: 51.708, lng: -76.342 },
-  "Abitibi—Témiscamingue": { lat: 47.903, lng: -78.636 },
-  "Ahuntsic-Cartierville": { lat: 45.543, lng: -73.673 },
-  "Alfred-Pellan": { lat: 45.614, lng: -73.710 },
-  "Argenteuil—La Petite-Nation": { lat: 45.759, lng: -74.934 },
-  "Avignon—La Mitis—Matane—Matapédia": { lat: 48.432, lng: -67.752 },
-  "Beauce": { lat: 46.198, lng: -70.601 },
-  "Beauport—Limoilou": { lat: 46.857, lng: -71.213 },
-  "Bécancour—Nicolet—Saurel": { lat: 46.182, lng: -72.580 },
-  "Bellechasse—Les Etchemins—Lévis": { lat: 46.690, lng: -71.059 },
-  "Beloeil—Chambly": { lat: 45.586, lng: -73.252 },
-  "Berthier—Maskinongé": { lat: 46.290, lng: -73.157 },
-  "Bourassa": { lat: 45.590, lng: -73.645 },
-  "Brome—Missisquoi": { lat: 45.209, lng: -72.632 },
-  "Brossard—Saint-Lambert": { lat: 45.462, lng: -73.472 },
-  "Charlesbourg—Haute-Saint-Charles": { lat: 46.877, lng: -71.308 },
-  "Châteauguay—Lacolle": { lat: 45.226, lng: -73.588 },
-  "Chicoutimi—Le Fjord": { lat: 48.368, lng: -71.048 },
-  "Dorval—Lachine—LaSalle": { lat: 45.434, lng: -73.681 },
-  "Drummond": { lat: 45.879, lng: -72.496 },
-  "Gaspésie—Les Îles-de-la-Madeleine": { lat: 49.215, lng: -64.160 },
-  "Gatineau": { lat: 45.484, lng: -75.652 },
-  "Hochelaga": { lat: 45.545, lng: -73.555 },
-  "Honoré-Mercier": { lat: 45.591, lng: -73.587 },
-  "Hull—Aylmer": { lat: 45.428, lng: -75.744 },
-  "Joliette": { lat: 46.066, lng: -73.511 },
-  "Jonquière": { lat: 48.410, lng: -71.247 },
-  "La Pointe-de-l'Île": { lat: 45.659, lng: -73.522 },
-  "La Prairie": { lat: 45.406, lng: -73.480 },
-  "Lac-Saint-Louis": { lat: 45.457, lng: -73.888 },
-  "Lac-Saint-Jean": { lat: 48.668, lng: -72.040 },
-  "Lasalle—Émard—Verdun": { lat: 45.443, lng: -73.594 },
-  "Laurentides—Labelle": { lat: 46.097, lng: -74.869 },
-  "Laurier—Sainte-Marie": { lat: 45.528, lng: -73.565 },
-  "Laval—Les Îles": { lat: 45.542, lng: -73.749 },
-  "Lévis—Lotbinière": { lat: 46.635, lng: -71.337 },
-  "Longueuil—Charles-LeMoyne": { lat: 45.534, lng: -73.503 },
-  "Longueuil—Saint-Hubert": { lat: 45.526, lng: -73.430 },
-  "Louis-Hébert": { lat: 46.769, lng: -71.299 },
-  "Louis-Saint-Laurent": { lat: 46.825, lng: -71.407 },
-  "Manicouagan": { lat: 49.779, lng: -66.122 },
-  "Mégantic—L'Érable": { lat: 45.851, lng: -71.176 },
-  "Mirabel": { lat: 45.657, lng: -74.086 },
-  "Montarville": { lat: 45.550, lng: -73.352 },
-  "Montcalm": { lat: 45.920, lng: -73.857 },
-  "Montmagny—L'Islet—Kamouraska—Rivière-du-Loup": { lat: 47.601, lng: -69.542 },
-  "Mount Royal": { lat: 45.514, lng: -73.639 },
-  "Notre-Dame-de-Grâce—Westmount": { lat: 45.475, lng: -73.610 },
-  "Outremont": { lat: 45.519, lng: -73.612 },
-  "Papineau": { lat: 45.543, lng: -73.613 },
-  "Pierrefonds—Dollard": { lat: 45.482, lng: -73.857 },
-  "Pontiac": { lat: 45.947, lng: -76.546 },
-  "Portneuf—Jacques-Cartier": { lat: 46.773, lng: -71.718 },
+  // ============= QUEBEC =============
+  "Montreal Centre": { lat: 45.501, lng: -73.567 },
   "Québec": { lat: 46.812, lng: -71.235 },
-  "Repentigny": { lat: 45.739, lng: -73.450 },
-  "Richmond—Arthabaska": { lat: 45.894, lng: -72.007 },
-  "Rimouski-Neigette—Témiscouata—Les Basques": { lat: 48.209, lng: -68.750 },
-  "Rivière-des-Mille-Îles": { lat: 45.629, lng: -73.827 },
-  "Rivière-du-Nord": { lat: 45.833, lng: -74.032 },
-  "Rosemont—La Petite-Patrie": { lat: 45.540, lng: -73.608 },
-  "Saint-Hyacinthe—Bagot": { lat: 45.616, lng: -72.947 },
-  "Saint-Jean": { lat: 45.306, lng: -73.275 },
-  "Saint-Laurent": { lat: 45.502, lng: -73.692 },
-  "Saint-Léonard—Saint-Michel": { lat: 45.589, lng: -73.606 },
-  "Saint-Maurice—Champlain": { lat: 46.621, lng: -72.753 },
-  "Salaberry—Suroît": { lat: 45.216, lng: -74.024 },
-  "Shefford": { lat: 45.398, lng: -72.544 },
+  "Gatineau": { lat: 45.484, lng: -75.652 },
+  "Laval—Les Îles": { lat: 45.542, lng: -73.749 },
   "Sherbrooke": { lat: 45.400, lng: -71.895 },
-  "Terrebonne": { lat: 45.689, lng: -73.673 },
-  "Thérèse-De Blainville": { lat: 45.662, lng: -73.826 },
   "Trois-Rivières": { lat: 46.347, lng: -72.547 },
-  "Vaudreuil—Soulanges": { lat: 45.398, lng: -74.184 },
-  "Ville-Marie—Le Sud-Ouest—Île-des-Sœurs": { lat: 45.485, lng: -73.559 },
-  "Vimy": { lat: 45.565, lng: -73.694 },
+  "Hull—Aylmer": { lat: 45.428, lng: -75.744 },
+  "Brossard—Saint-Lambert": { lat: 45.462, lng: -73.472 },
+  "Longueuil—Saint-Hubert": { lat: 45.526, lng: -73.430 },
   
-  // ============= MANITOBA (14 ridings) =============
-  "Brandon—Souris": { lat: 49.826, lng: -99.956 },
-  "Charleswood—St. James—Assiniboia—Headingley": { lat: 49.872, lng: -97.279 },
-  "Churchill—Keewatinook Aski": { lat: 55.750, lng: -97.867 },
-  "Dauphin—Swan River—Neepawa": { lat: 51.396, lng: -100.164 },
-  "Elmwood—Transcona": { lat: 49.908, lng: -97.036 },
-  "Kildonan—St. Paul": { lat: 49.953, lng: -97.068 },
-  "Portage—Lisgar": { lat: 49.767, lng: -98.295 },
-  "Provencher": { lat: 49.455, lng: -96.679 },
-  "Saint Boniface—Saint Vital": { lat: 49.857, lng: -97.089 },
-  "Selkirk—Interlake—Eastman": { lat: 50.513, lng: -96.948 },
+  // ============= MANITOBA =============
   "Winnipeg Centre": { lat: 49.894, lng: -97.157 },
   "Winnipeg North": { lat: 49.938, lng: -97.123 },
   "Winnipeg South": { lat: 49.821, lng: -97.149 },
   "Winnipeg South Centre": { lat: 49.858, lng: -97.154 },
+  "Brandon—Souris": { lat: 49.826, lng: -99.956 },
   
-  // ============= SASKATCHEWAN (14 ridings) =============
-  "Battlefords—Lloydminster": { lat: 52.979, lng: -109.394 },
-  "Carlton Trail—Eagle Creek": { lat: 52.536, lng: -106.043 },
-  "Cypress Hills—Grasslands": { lat: 49.998, lng: -108.266 },
-  "Desnethé—Missinippi—Churchill River": { lat: 55.166, lng: -105.555 },
-  "Moose Jaw—Lake Centre—Lanigan": { lat: 50.748, lng: -105.429 },
-  "Prince Albert": { lat: 53.642, lng: -105.445 },
-  "Regina—Lewvan": { lat: 50.435, lng: -104.646 },
-  "Regina—Qu'Appelle": { lat: 50.573, lng: -104.079 },
-  "Regina—Wascana": { lat: 50.445, lng: -104.589 },
-  "Saskatoon—Grasswood": { lat: 52.077, lng: -106.592 },
+  // ============= SASKATCHEWAN =============
   "Saskatoon—University": { lat: 52.129, lng: -106.590 },
   "Saskatoon West": { lat: 52.149, lng: -106.716 },
-  "Souris—Moose Mountain": { lat: 49.647, lng: -103.158 },
-  "Yorkton—Melville": { lat: 51.364, lng: -102.607 },
+  "Regina—Wascana": { lat: 50.445, lng: -104.589 },
+  "Regina—Lewvan": { lat: 50.435, lng: -104.646 },
+  "Prince Albert": { lat: 53.642, lng: -105.445 },
   
-  // ============= NOVA SCOTIA (11 ridings) =============
-  "Cape Breton—Canso": { lat: 45.787, lng: -61.134 },
-  "Central Nova": { lat: 45.521, lng: -62.417 },
-  "Cumberland—Colchester": { lat: 45.644, lng: -63.817 },
-  "Dartmouth—Cole Harbour": { lat: 44.686, lng: -63.527 },
+  // ============= NOVA SCOTIA =============
   "Halifax": { lat: 44.648, lng: -63.575 },
   "Halifax West": { lat: 44.671, lng: -63.672 },
-  "Kings—Hants": { lat: 45.085, lng: -64.444 },
-  "Sackville—Preston—Chezzetcook": { lat: 44.800, lng: -63.340 },
-  "South Shore—St. Margarets": { lat: 44.433, lng: -64.542 },
+  "Dartmouth—Cole Harbour": { lat: 44.686, lng: -63.527 },
+  "Cape Breton—Canso": { lat: 45.787, lng: -61.134 },
   "Sydney—Victoria": { lat: 46.142, lng: -60.265 },
-  "West Nova": { lat: 44.120, lng: -65.962 },
   
-  // ============= NEW BRUNSWICK (10 ridings) =============
-  "Acadie—Bathurst": { lat: 47.627, lng: -65.649 },
-  "Beauséjour": { lat: 46.293, lng: -64.785 },
+  // ============= NEW BRUNSWICK =============
   "Fredericton": { lat: 45.964, lng: -66.643 },
-  "Fundy Royal": { lat: 45.814, lng: -65.162 },
-  "Madawaska—Restigouche": { lat: 47.524, lng: -67.742 },
-  "Miramichi—Grand Lake": { lat: 46.571, lng: -65.373 },
   "Moncton—Riverview—Dieppe": { lat: 46.094, lng: -64.781 },
-  "New Brunswick Southwest": { lat: 45.457, lng: -66.914 },
   "Saint John—Rothesay": { lat: 45.316, lng: -66.059 },
-  "Tobique—Mactaquac": { lat: 46.573, lng: -67.386 },
   
-  // ============= NEWFOUNDLAND AND LABRADOR (7 ridings) =============
-  "Avalon": { lat: 47.544, lng: -53.129 },
-  "Bonavista—Burin—Trinity": { lat: 48.307, lng: -53.853 },
-  "Coast of Bays—Central—Notre Dame": { lat: 49.026, lng: -55.390 },
-  "Labrador": { lat: 53.314, lng: -60.411 },
-  "Long Range Mountains": { lat: 49.109, lng: -57.684 },
+  // ============= NEWFOUNDLAND =============
   "St. John's East": { lat: 47.566, lng: -52.713 },
   "St. John's South—Mount Pearl": { lat: 47.514, lng: -52.779 },
   
-  // ============= PRINCE EDWARD ISLAND (4 ridings) =============
-  "Cardigan": { lat: 46.221, lng: -62.566 },
-  "Charlottetown": { lat: 46.238, lng: -63.130 },
-  "Egmont": { lat: 46.589, lng: -64.125 },
-  "Malpeque": { lat: 46.493, lng: -63.549 },
+  // ============= PRINCE EDWARD ISLAND =============
+  "Charlottetown": { lat: 46.238, lng: -63.131 },
   
-  // ============= TERRITORIES (3 ridings) =============
+  // ============= TERRITORIES =============
   "Northwest Territories": { lat: 64.825, lng: -124.845 },
   "Nunavut": { lat: 70.299, lng: -83.107 },
   "Yukon": { lat: 63.626, lng: -135.168 }
 };
 
+// Province centers for districts without coordinates
+const provinceFallbacks = {
+  "AB": { lat: 53.933, lng: -116.576 },
+  "BC": { lat: 53.726, lng: -127.647 },
+  "MB": { lat: 55.000, lng: -97.000 },
+  "NB": { lat: 46.500, lng: -66.500 },
+  "NL": { lat: 53.000, lng: -60.000 },
+  "NS": { lat: 44.681, lng: -63.744 },
+  "NT": { lat: 64.825, lng: -124.845 },
+  "NU": { lat: 70.299, lng: -83.107 },
+  "ON": { lat: 51.253, lng: -85.323 },
+  "PE": { lat: 46.500, lng: -63.500 },
+  "QC": { lat: 52.939, lng: -73.549 },
+  "SK": { lat: 54.000, lng: -106.000 },
+  "YT": { lat: 63.626, lng: -135.168 }
+};
+
+// Function to get coordinates for a district
+function getRidingCoordinates(districtName, provinceCode) {
+  // Try exact match first
+  if (ridingCoords[districtName]) {
+    return ridingCoords[districtName];
+  }
+  
+  // Try case-insensitive match
+  const lowerName = districtName.toLowerCase();
+  for (const [key, coords] of Object.entries(ridingCoords)) {
+    if (key.toLowerCase() === lowerName) {
+      return coords;
+    }
+  }
+  
+  // Try partial match (for districts with em dash vs hyphen differences)
+  const normalizedName = districtName.replace(/[—–]/g, '-');
+  for (const [key, coords] of Object.entries(ridingCoords)) {
+    const normalizedKey = key.replace(/[—–]/g, '-');
+    if (normalizedKey === normalizedName) {
+      return coords;
+    }
+  }
+  
+  // Try to extract city name (first part before dash)
+  const firstPart = normalizedName.split('-')[0].split('—')[0].trim();
+  for (const [key, coords] of Object.entries(ridingCoords)) {
+    if (key.includes(firstPart) && key.length > firstPart.length) {
+      return coords;
+    }
+  }
+  
+  // Fallback to province center
+  if (provinceCode && provinceFallbacks[provinceCode]) {
+    console.log(`Using province fallback for ${districtName} (${provinceCode})`);
+    return provinceFallbacks[provinceCode];
+  }
+  
+  // Default to center of Canada
+  console.log(`No coordinates found for ${districtName}`);
+  return { lat: 56.130, lng: -106.346 };
+}
+
 // Make it globally available
 if (typeof window !== 'undefined') {
   window.ridingCoords = ridingCoords;
+  window.getRidingCoordinates = getRidingCoordinates;
 }
 
 // Export for Node.js
 if (typeof module !== 'undefined' && module.exports) {
-  module.exports = ridingCoords;
+  module.exports = { ridingCoords, getRidingCoordinates, provinceFallbacks };
 }

@@ -86,16 +86,30 @@ async function fetchPoliticians(query = "", province = "", offset = 0) {
   }
 }
 
-// ─── Update map markers ───────────────────────────────────────────────────────
+// ─── Update map markers with fallback support ─────────────────────────────────
 function updateMapMarkers(politicians) {
   if (!markersLayer || !map) return;
   
   markersLayer.clearLayers();
   const bounds = [];
+  let markersAdded = 0;
+  let fallbackUsed = 0;
   
   politicians.forEach(politician => {
-    const coords = window.ridingCoords && window.ridingCoords[politician.district];
-    if (!coords) return;
+    // Use the new getRidingCoordinates function
+    let coords = window.getRidingCoordinates 
+      ? window.getRidingCoordinates(politician.district, politician.province)
+      : (window.ridingCoords && window.ridingCoords[politician.district]);
+    
+    if (!coords) {
+      console.log(`No coordinates for: ${politician.district} (${politician.province})`);
+      return;
+    }
+    
+    if (!window.ridingCoords[politician.district]) {
+      fallbackUsed++;
+    }
+    markersAdded++;
     
     const popupContent = `
       <div class="map-popup" onclick="window.showPoliticianModal('${escapeHtml(politician.name)}', '${escapeHtml(politician.party)}', '${escapeHtml(politician.district)}', '${escapeHtml(politician.province)}')">
@@ -103,6 +117,7 @@ function updateMapMarkers(politicians) {
         <div class="popup-party">${escapeHtml(politician.party)}</div>
         <div class="popup-district">${escapeHtml(politician.district)}</div>
         <div class="popup-district">${escapeHtml(politician.province)}</div>
+        ${!window.ridingCoords[politician.district] ? '<div class="popup-district" style="color: orange;">📍 Approximate location</div>' : ''}
       </div>
     `;
     
@@ -116,6 +131,8 @@ function updateMapMarkers(politicians) {
   if (bounds.length > 0 && map) {
     map.fitBounds(bounds, { padding: [40, 40] });
   }
+  
+  console.log(`Map updated: ${markersAdded} markers added, ${fallbackUsed} used fallback coordinates`);
 }
 
 // ─── Display results cards ────────────────────────────────────────────────────
