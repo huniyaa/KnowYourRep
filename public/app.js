@@ -133,6 +133,7 @@ async function fetchPoliticians(query = "", province = "", offset = 0) {
 
 
 // ─── Update map markers with party colors ─────────────────────────────────────
+// ─── Update map markers with party-colored pins ─────────────────────────────────────
 function updateMapMarkers(politicians) {
   if (!markersLayer || !map) return;
   
@@ -152,20 +153,39 @@ function updateMapMarkers(politicians) {
     // Get party color
     let markerColor = window.getMarkerColor ? window.getMarkerColor(politician.party) : "#c0392b";
     
-    const customIcon = L.divIcon({
-      className: 'custom-marker',
+    // Create custom pin icon using Leaflet's default icon with custom color
+    // We'll use a custom marker that looks like a pin/teardrop
+    const pinIcon = L.divIcon({
+      className: 'custom-pin',
       html: `<div style="
-        background-color: ${markerColor};
-        width: 24px;
-        height: 24px;
-        border-radius: 50%;
-        border: 2px solid white;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.3);
-        transition: transform 0.2s;
-        cursor: pointer;
-      "></div>`,
-      iconSize: [24, 24],
-      popupAnchor: [0, -12]
+        position: relative;
+        width: 0;
+        height: 0;
+      ">
+        <div style="
+          position: absolute;
+          left: -12px;
+          top: -30px;
+          width: 0;
+          height: 0;
+          border-left: 12px solid transparent;
+          border-right: 12px solid transparent;
+          border-bottom: 24px solid ${markerColor};
+          filter: drop-shadow(0 2px 2px rgba(0,0,0,0.3));
+        "></div>
+        <div style="
+          position: absolute;
+          left: -4px;
+          top: -24px;
+          width: 8px;
+          height: 8px;
+          background: white;
+          border-radius: 50%;
+          z-index: 2;
+        "></div>
+      </div>`,
+      iconSize: [24, 30],
+      popupAnchor: [0, -24]
     });
     
     const popupContent = `
@@ -176,23 +196,23 @@ function updateMapMarkers(politicians) {
         </div>
         <div class="popup-district">${escapeHtml(politician.district)}</div>
         <div class="popup-district">${escapeHtml(politician.province)}</div>
+        ${!window.ridingCoords[politician.district] ? '<div class="popup-district" style="color: orange;">📍 Approximate location</div>' : ''}
       </div>
     `;
     
-    const marker = L.marker([coords.lat, coords.lng], { icon: customIcon })
+    const marker = L.marker([coords.lat, coords.lng], { icon: pinIcon })
       .bindPopup(popupContent);
     
     markersLayer.addLayer(marker);
     bounds.push([coords.lat, coords.lng]);
   });
   
-  // Zoom with animation and appropriate padding
+  // Zoom with animation
   if (bounds.length > 0 && map) {
-    // Add a small delay to ensure markers are rendered
     setTimeout(() => {
       map.flyToBounds(bounds, { 
         padding: [50, 50],
-        duration: 0.8, // Smooth animation
+        duration: 0.8,
         easeLinearity: 0.25
       });
     }, 100);
@@ -200,12 +220,9 @@ function updateMapMarkers(politicians) {
   
   console.log(`Map updated: ${markersAdded} markers added`);
   
-  // If there's only one marker, zoom in closer
   if (bounds.length === 1 && map) {
     const singleMarker = bounds[0];
-    map.flyTo(singleMarker, 10, {
-      duration: 0.8
-    });
+    map.flyTo(singleMarker, 10, { duration: 0.8 });
   }
 }
 

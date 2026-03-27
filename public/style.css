@@ -799,3 +799,50 @@ blockquote footer {
 #map {
   position: relative;
 }
+
+/* Custom Pin Marker Styles */
+.custom-pin {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+}
+
+.custom-pin div {
+  transition: transform 0.2s ease;
+}
+
+.custom-pin:hover div:first-child {
+  transform: scale(1.1);
+  transition: transform 0.2s ease;
+}
+
+/* Map popup styles */
+.map-popup {
+  cursor: pointer;
+  padding: 4px;
+  min-width: 180px;
+}
+
+.map-popup strong {
+  font-size: 14px;
+  display: block;
+  margin-bottom: 6px;
+  color: #1a202c;
+}
+
+.popup-party {
+  font-weight: bold;
+  margin: 4px 0;
+  font-size: 12px;
+}
+
+.popup-district {
+  font-size: 11px;
+  color: #666;
+  margin: 2px 0;
+}
+
+.leaflet-popup-content {
+  margin: 12px;
+  min-width: 180px;
+}
