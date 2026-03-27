@@ -8,15 +8,16 @@ export default async function handler(req, res) {
   }
   
   try {
-    const { politician, riding } = req.query;
+    const { politician } = req.query;
     
-    let searchUrl = `https://api.openparliament.ca/politicians/?format=json&limit=20`;
-    
-    // If we have a riding, search by that too
-    if (riding) {
-      searchUrl = `https://api.openparliament.ca/politicians/?format=json&limit=20&riding=${encodeURIComponent(riding)}`;
+    if (!politician) {
+      return res.status(400).json({ error: 'Politician name is required' });
     }
     
+    console.log(`Searching for politician: ${politician}`);
+    
+    // First, search for the politician to get their slug
+    const searchUrl = `https://api.openparliament.ca/politicians/?format=json&limit=100&name=${encodeURIComponent(politician)}`;
     const searchResponse = await fetch(searchUrl);
     
     if (!searchResponse.ok) {
@@ -27,53 +28,59 @@ export default async function handler(req, res) {
     const searchData = await searchResponse.json();
     
     if (!searchData.objects || searchData.objects.length === 0) {
+      console.log(`No politician found for: ${politician}`);
       return res.status(200).json({ objects: [] });
     }
     
-    // Find the politician
-    let politicianData = null;
+    // Find the politician by name
+    let politicianObj = searchData.objects[0];
     
-    if (politician) {
-      politicianData = searchData.objects.find(p => 
+    // Try to find exact match if multiple
+    if (searchData.objects.length > 1) {
+      politicianObj = searchData.objects.find(p => 
         p.name.toLowerCase() === politician.toLowerCase()
-      );
-      
-      if (!politicianData) {
-        const searchName = politician.toLowerCase().split(' ');
-        politicianData = searchData.objects.find(p => {
-          const pName = p.name.toLowerCase();
-          return searchName.every(part => pName.includes(part));
-        });
-      }
+      ) || searchData.objects[0];
     }
     
-    if (!politicianData && searchData.objects.length > 0) {
-      politicianData = searchData.objects[0];
-    }
+    // Get the politician's slug from the URL
+    const urlParts = politicianObj.url.split('/').filter(Boolean);
+    const slug = urlParts[urlParts.length - 1];
     
-    if (!politicianData) {
-      return res.status(200).json({ objects: [] });
-    }
+    console.log(`Found politician: ${politicianObj.name}, slug: ${slug}`);
     
-    const politicianUrl = politicianData.url;
-    console.log(`Fetching statements from: ${politicianUrl}`);
+    // Use the correct endpoint for speeches/statements
+    const statementsUrl = `https://api.openparliament.ca/speeches/?format=json&limit=5&politician=${slug}`;
+    console.log(`Fetching from: ${statementsUrl}`);
     
-    const statementsUrl = `${politicianUrl}statements/?format=json&limit=10`;
     const statementsResponse = await fetch(statementsUrl);
     
     if (!statementsResponse.ok) {
+      console.error(`Statements fetch failed: ${statementsResponse.status}`);
       return res.status(200).json({ objects: [] });
     }
     
     const statementsData = await statementsResponse.json();
     
-    const formattedStatements = statementsData.objects?.map(statement => ({
-      text: { en: statement.text?.en || "No text available" },
-      date: statement.date,
-      context: statement.context?.en
-    })).filter(s => s.text.en !== "No text available") || [];
+    // Format the statements
+    const formattedStatements = statementsData.objects?.map(statement => {
+      let text = statement.text || "";
+      
+      // Clean up the text
+      text = text.replace(/\s+/g, ' ').trim();
+      
+      // Truncate if too long
+      if (text.length > 400) {
+        text = text.substring(0, 400) + "...";
+      }
+      
+      return {
+        text: { en: text },
+        date: statement.date,
+        context: "House of Commons"
+      };
+    }).filter(s => s.text.en && s.text.en !== "" && s.text.en !== "No text available") || [];
     
-    console.log(`Found ${formattedStatements.length} statements for ${politicianData.name}`);
+    console.log(`Found ${formattedStatements.length} statements for ${politicianObj.name}`);
     
     res.status(200).json({ objects: formattedStatements });
     
