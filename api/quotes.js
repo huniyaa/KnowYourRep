@@ -16,76 +16,81 @@ export default async function handler(req, res) {
     
     console.log(`Searching for politician: ${politician}`);
     
-    // First, search for the politician to get their slug
-    const searchUrl = `https://api.openparliament.ca/politicians/?format=json&limit=100&name=${encodeURIComponent(politician)}`;
+    // First, get the politician's slug
+    const searchUrl = `https://api.openparliament.ca/politicians/?format=json&limit=50&name=${encodeURIComponent(politician)}`;
     const searchResponse = await fetch(searchUrl);
     
     if (!searchResponse.ok) {
-      console.error(`Search failed: ${searchResponse.status}`);
       return res.status(200).json({ objects: [] });
     }
     
     const searchData = await searchResponse.json();
     
     if (!searchData.objects || searchData.objects.length === 0) {
-      console.log(`No politician found for: ${politician}`);
       return res.status(200).json({ objects: [] });
     }
     
-    // Find the politician by name
-    let politicianObj = searchData.objects[0];
-    
-    // Try to find exact match if multiple
-    if (searchData.objects.length > 1) {
-      politicianObj = searchData.objects.find(p => 
-        p.name.toLowerCase() === politician.toLowerCase()
-      ) || searchData.objects[0];
-    }
-    
-    // Get the politician's slug from the URL
+    // Get the slug from the URL
+    const politicianObj = searchData.objects[0];
     const urlParts = politicianObj.url.split('/').filter(Boolean);
     const slug = urlParts[urlParts.length - 1];
     
-    console.log(`Found politician: ${politicianObj.name}, slug: ${slug}`);
+    console.log(`Found: ${politicianObj.name}, slug: ${slug}`);
     
-    // Use the correct endpoint for speeches/statements
-    const statementsUrl = `https://api.openparliament.ca/speeches/?format=json&limit=5&politician=${slug}`;
-    console.log(`Fetching from: ${statementsUrl}`);
+    // Fetch speeches using the correct endpoint
+    const speechesUrl = `https://api.openparliament.ca/speeches/?format=json&limit=5&politician=${slug}`;
+    const speechesResponse = await fetch(speechesUrl);
     
-    const statementsResponse = await fetch(statementsUrl);
-    
-    if (!statementsResponse.ok) {
-      console.error(`Statements fetch failed: ${statementsResponse.status}`);
+    if (!speechesResponse.ok) {
       return res.status(200).json({ objects: [] });
     }
     
-    const statementsData = await statementsResponse.json();
+    const speechesData = await speechesResponse.json();
     
-    // Format the statements
-    const formattedStatements = statementsData.objects?.map(statement => {
-      let text = statement.text || "";
+    // Format the speeches - FIXED: using content field, not text
+    const formatted = speechesData.objects?.map(speech => {
+      // Get the text from the content field
+      let text = "";
       
-      // Clean up the text
-      text = text.replace(/\s+/g, ' ').trim();
-      
-      // Truncate if too long
-      if (text.length > 400) {
-        text = text.substring(0, 400) + "...";
+      // Check different possible field names
+      if (speech.content) {
+        if (typeof speech.content === 'string') {
+          text = speech.content;
+        } else if (speech.content.en) {
+          text = speech.content.en;
+        } else if (speech.content.text) {
+          text = speech.content.text;
+        }
+      } else if (speech.text) {
+        text = speech.text;
       }
       
+      // Clean up the text
+      if (text) {
+        text = text.replace(/\s+/g, ' ').trim();
+        
+        // Truncate if too long
+        if (text.length > 400) {
+          text = text.substring(0, 400) + "...";
+        }
+      }
+      
+      // Get the date from time field or date field
+      const date = speech.time || speech.date;
+      
       return {
-        text: { en: text },
-        date: statement.date,
-        context: "House of Commons"
+        text: { en: text || "No text available" },
+        date: date,
+        context: "House of Commons Speech"
       };
-    }).filter(s => s.text.en && s.text.en !== "" && s.text.en !== "No text available") || [];
+    }).filter(s => s.text.en && s.text.en !== "No text available") || [];
     
-    console.log(`Found ${formattedStatements.length} statements for ${politicianObj.name}`);
+    console.log(`Found ${formatted.length} speeches for ${politicianObj.name}`);
     
-    res.status(200).json({ objects: formattedStatements });
+    res.status(200).json({ objects: formatted });
     
   } catch (error) {
-    console.error('Error fetching quotes:', error);
+    console.error('Error:', error);
     res.status(200).json({ objects: [] });
   }
 }
