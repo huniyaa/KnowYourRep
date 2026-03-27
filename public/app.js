@@ -22,6 +22,58 @@ let activeIndex = -1;
 let allReps = [];
 let map; // Store map reference
 
+//Scroll 
+// Scroll animation and hero hide logic
+function initScrollAnimation() {
+  const hero = document.getElementById('hero');
+  const appContent = document.getElementById('app-content');
+  const scrollIndicator = document.querySelector('.scroll-indicator');
+  
+  // Function to hide hero and show content
+  function revealContent() {
+    if (hero && appContent) {
+      hero.classList.add('hide-hero');
+      appContent.classList.remove('hidden');
+    }
+  }
+  
+  // Listen for scroll
+  window.addEventListener('scroll', () => {
+    if (window.scrollY > 50) {
+      revealContent();
+    }
+  });
+  
+  // Click on scroll indicator
+  if (scrollIndicator) {
+    scrollIndicator.addEventListener('click', () => {
+      revealContent();
+      // Smooth scroll to content
+      window.scrollTo({
+        top: window.innerHeight,
+        behavior: 'smooth'
+      });
+    });
+  }
+  
+  // Also trigger if user scrolls immediately
+  if (window.scrollY > 50) {
+    revealContent();
+  }
+}
+
+// Call this after your init function or in DOMContentLoaded
+// Add this line to your existing init() function or call it separately
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', () => {
+    initScrollAnimation();
+    init(); // Your existing init function
+  });
+} else {
+  initScrollAnimation();
+  init();
+}
+
 // ─── Initialize map after DOM is ready ────────────────────────────────────────
 function initMap() {
   // Check if map element exists

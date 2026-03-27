@@ -7,128 +7,131 @@
   <link rel="stylesheet" href="style.css" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
 </head>
 <body>
-  <header>
-    <h1><i class="fas fa-landmark"></i> Know Your Rep</h1>
-    <p>Discover your local political representatives beyond party lines</p>
-    <p><small>Data from <a href="https://openparliament.ca" target="_blank">openparliament.ca</a></small></p>
-  </header>
-  
-  <div id="controls">
-    <div id="search-wrapper">
-      <input type="text" id="search" placeholder="Search by name or district…" autocomplete="off" />
-      <ul id="dropdown" hidden></ul>
+  <!-- Hero Section - Full Screen Initial View -->
+  <section id="hero">
+    <div class="hero-content">
+      <h1 class="hero-title">
+        Know <span class="underlined">Your</span> Rep
+      </h1>
+      <div class="scroll-indicator">
+        <span class="scroll-text">Scroll to explore</span>
+        <i class="fas fa-chevron-down scroll-arrow"></i>
+      </div>
     </div>
-    <select id="province-filter">
-      <option value="">All provinces</option>
-      <option value="AB">Alberta</option>
-      <option value="BC">British Columbia</option>
-      <option value="MB">Manitoba</option>
-      <option value="NB">New Brunswick</option>
-      <option value="NL">Newfoundland and Labrador</option>
-      <option value="NS">Nova Scotia</option>
-      <option value="NT">Northwest Territories</option>
-      <option value="NU">Nunavut</option>
-      <option value="ON">Ontario</option>
-      <option value="PE">Prince Edward Island</option>
-      <option value="QC">Quebec</option>
-      <option value="SK">Saskatchewan</option>
-      <option value="YT">Yukon</option>
-    </select>
-    <button id="use-location" class="location-btn">
-      <i class="fas fa-location-dot"></i> My Location
-    </button>
-  </div>
-  <div class="province-quick-filters">
-  <button class="quick-filter" data-province="">All Canada</button>
-  <button class="quick-filter" data-province="ON">Ontario</button>
-  <button class="quick-filter" data-province="QC">Quebec</button>
-  <button class="quick-filter" data-province="BC">BC</button>
-  <button class="quick-filter" data-province="AB">Alberta</button>
-  <button class="quick-filter" data-province="MB">Manitoba</button>
-  <button class="quick-filter" data-province="SK">Saskatchewan</button>
-  <button class="quick-filter" data-province="NS">Nova Scotia</button>
-  <button class="quick-filter" data-province="NB">New Brunswick</button>
-  <button class="quick-filter" data-province="NL">Newfoundland</button>
-  <button class="quick-filter" data-province="PE">PEI</button>
-  <button class="quick-filter" data-province="YT">Yukon</button>
-  <button class="quick-filter" data-province="NT">NWT</button>
-  <button class="quick-filter" data-province="NU">Nunavut</button>
-</div>
-  
-  <div id="status"></div>
-  <div id="map"></div>
-  <!-- Province Info Panel -->
-<div id="province-info" class="province-info" style="display: none;">
-  <div class="province-info-content">
-    <span class="province-name"></span>
-    <span class="province-count"></span>
-    <button id="reset-view" class="reset-view-btn">Show All Canada</button>
-  </div>
-</div>
-  <div id="province-stats" class="province-stats" style="display: none;">
-  <div class="stats-container"></div>
-</div>
-  <!-- Party Color Legend -->
-<div id="map-legend" style="position: absolute; bottom: 20px; right: 20px; background: white; padding: 12px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.15); z-index: 1000; font-size: 12px; min-width: 140px;">
-  <strong style="display: block; margin-bottom: 8px;">🎨 Political Parties</strong>
-  <div style="margin-bottom: 6px;">
-    <span style="display: inline-block; width: 12px; height: 12px; background: #d1001f; border-radius: 50%; margin-right: 8px;"></span>
-    Liberal
-  </div>
-  <div style="margin-bottom: 6px;">
-    <span style="display: inline-block; width: 12px; height: 12px; background: #1a4782; border-radius: 50%; margin-right: 8px;"></span>
-    Conservative
-  </div>
-  <div style="margin-bottom: 6px;">
-    <span style="display: inline-block; width: 12px; height: 12px; background: #f48d2b; border-radius: 50%; margin-right: 8px;"></span>
-    NDP
-  </div>
-  <div style="margin-bottom: 6px;">
-    <span style="display: inline-block; width: 12px; height: 12px; background: #3d9b35; border-radius: 50%; margin-right: 8px;"></span>
-    Green
-  </div>
-  <div style="margin-bottom: 6px;">
-    <span style="display: inline-block; width: 12px; height: 12px; background: #00b5e2; border-radius: 50%; margin-right: 8px;"></span>
-    Bloc Québécois
-  </div>
-  <div>
-    <span style="display: inline-block; width: 12px; height: 12px; background: #6c757d; border-radius: 50%; margin-right: 8px;"></span>
-    Independent/Other
-  </div>
-  <hr style="margin: 8px 0;">
-  <div style="font-size: 10px; color: #999;">
-    <span style="display: inline-block; width: 12px; height: 12px; background: #f39c12; border-radius: 50%; margin-right: 8px;"></span>
-    ≈ Approximate location
-  </div>
-</div>
-  <div id="results"></div>
-  <div id="pagination"></div>
-  
-  <!-- Politician Detail Modal - Remove the 'hidden' attribute -->
-<div id="politician-modal" class="modal">
-  <div class="modal-content">
-    <div class="modal-header">
-      <h2 id="modal-name"></h2>
-      <button id="close-modal" class="close-modal">&times;</button>
+  </section>
+
+  <!-- Main App Content - Hidden until scroll -->
+  <div id="app-content" class="app-content hidden">
+    <!-- Sticky Header -->
+    <header id="sticky-header" class="sticky-header">
+      <div class="header-container">
+        <h1 class="header-title">Know <span class="underlined-small">Your</span> Rep</h1>
+        <p class="header-subtitle">Discover your local political representatives beyond party lines</p>
+      </div>
+    </header>
+
+    <!-- Controls -->
+    <div id="controls" class="controls">
+      <div id="search-wrapper">
+        <input type="text" id="search" placeholder="Search by name or district…" autocomplete="off" />
+        <ul id="dropdown" hidden></ul>
+      </div>
+      <select id="province-filter">
+        <option value="">All provinces</option>
+        <option value="AB">Alberta</option>
+        <option value="BC">British Columbia</option>
+        <option value="MB">Manitoba</option>
+        <option value="NB">New Brunswick</option>
+        <option value="NL">Newfoundland and Labrador</option>
+        <option value="NS">Nova Scotia</option>
+        <option value="NT">Northwest Territories</option>
+        <option value="NU">Nunavut</option>
+        <option value="ON">Ontario</option>
+        <option value="PE">Prince Edward Island</option>
+        <option value="QC">Quebec</option>
+        <option value="SK">Saskatchewan</option>
+        <option value="YT">Yukon</option>
+      </select>
+      <button id="use-location" class="location-btn">
+        <i class="fas fa-location-dot"></i> My Location
+      </button>
     </div>
-    <div class="modal-body">
-      <p><strong><i class="fas fa-tag"></i> Party:</strong> <span id="modal-party"></span></p>
-      <p><strong><i class="fas fa-map-marker-alt"></i> District:</strong> <span id="modal-district"></span></p>
-      <p><strong><i class="fas fa-calendar-alt"></i> Province:</strong> <span id="modal-province"></span></p>
-      <div class="quotes-section">
-        <h4><i class="fas fa-quote-left"></i> Recent Statements</h4>
-        <div id="modal-quotes-text"></div>
-        <div class="modal-footer">
-  <a href="#" id="modal-learn-more" target="_blank" rel="noopener noreferrer" class="learn-more-btn">
-    <i class="fas fa-external-link-alt"></i> Learn more on OpenParliament
-  </a>
-</div>
+
+    <!-- Quick Filters -->
+    <div class="province-quick-filters">
+      <button class="quick-filter" data-province="">All Canada</button>
+      <button class="quick-filter" data-province="ON">Ontario</button>
+      <button class="quick-filter" data-province="QC">Quebec</button>
+      <button class="quick-filter" data-province="BC">BC</button>
+      <button class="quick-filter" data-province="AB">Alberta</button>
+      <button class="quick-filter" data-province="MB">Manitoba</button>
+      <button class="quick-filter" data-province="SK">Saskatchewan</button>
+      <button class="quick-filter" data-province="NS">Nova Scotia</button>
+      <button class="quick-filter" data-province="NB">New Brunswick</button>
+      <button class="quick-filter" data-province="NL">Newfoundland</button>
+      <button class="quick-filter" data-province="PE">PEI</button>
+      <button class="quick-filter" data-province="YT">Yukon</button>
+      <button class="quick-filter" data-province="NT">NWT</button>
+      <button class="quick-filter" data-province="NU">Nunavut</button>
+    </div>
+    
+    <div id="status"></div>
+    <div id="map"></div>
+    
+    <!-- Province Info Panel -->
+    <div id="province-info" class="province-info" style="display: none;">
+      <div class="province-info-content">
+        <span class="province-name"></span>
+        <span class="province-count"></span>
+        <button id="reset-view" class="reset-view-btn">Show All Canada</button>
+      </div>
+    </div>
+    
+    <!-- Party Color Legend -->
+    <div id="map-legend" class="map-legend">
+      <strong>🎨 Political Parties</strong>
+      <div><span class="legend-color liberal"></span> Liberal</div>
+      <div><span class="legend-color conservative"></span> Conservative</div>
+      <div><span class="legend-color ndp"></span> NDP</div>
+      <div><span class="legend-color green"></span> Green</div>
+      <div><span class="legend-color bloc"></span> Bloc Québécois</div>
+      <div><span class="legend-color independent"></span> Independent/Other</div>
+      <hr>
+      <div class="legend-note"><span class="legend-color approximate"></span> ≈ Approximate location</div>
+    </div>
+    
+    <div id="results"></div>
+    <div id="pagination"></div>
+  </div>
+  
+  <!-- Politician Detail Modal -->
+  <div id="politician-modal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <div id="modal-politician-photo"></div>
+        <h2 id="modal-name"></h2>
+        <button id="close-modal" class="close-modal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p><strong><i class="fas fa-tag"></i> Party:</strong> <span id="modal-party"></span></p>
+        <p><strong><i class="fas fa-map-marker-alt"></i> District:</strong> <span id="modal-district"></span></p>
+        <p><strong><i class="fas fa-calendar-alt"></i> Province:</strong> <span id="modal-province"></span></p>
+        <div class="quotes-section">
+          <h4><i class="fas fa-quote-left"></i> Recent Statement</h4>
+          <div id="modal-quotes-text"></div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <a href="#" id="modal-learn-more" target="_blank" rel="noopener noreferrer" class="learn-more-btn">
+          <i class="fas fa-external-link-alt"></i> Learn more on OpenParliament
+        </a>
       </div>
     </div>
   </div>
-</div>
+  
   <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
   <script src="ridingCoords.js"></script>
   <script src="app.js"></script>
