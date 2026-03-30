@@ -1,4 +1,4 @@
-// ─── DOM Elements first ───────────────────────────────────────────────────────
+// ─── DOM Elements ─────────────────────────────────────────────────────────────
 const searchInput = document.getElementById("search");
 const dropdown = document.getElementById("dropdown");
 const provinceFilter = document.getElementById("province-filter");
@@ -22,53 +22,7 @@ let activeIndex = -1;
 let allReps = [];
 let map;
 
-// ─── Scroll Animation ────────────────────────────────────────────────────────
-function initScrollAnimation() {
-  const hero = document.getElementById('hero');
-  const appContent = document.getElementById('app-content');
-  const scrollIndicator = document.querySelector('.scroll-indicator');
-  
-  function revealContent() {
-    if (hero && appContent) {
-      hero.classList.add('hide-hero');
-      appContent.classList.remove('hidden');
-      // Force a reflow to ensure the map renders correctly
-      setTimeout(() => {
-        if (map) map.invalidateSize();
-      }, 100);
-    }
-  }
-  
-  // Mouse wheel scroll
-  window.addEventListener('wheel', (e) => {
-    if (window.scrollY > 10 || e.deltaY > 0) {
-      revealContent();
-    }
-  });
-  
-  // Regular scroll
-  window.addEventListener('scroll', () => {
-    if (window.scrollY > 50) {
-      revealContent();
-    }
-  });
-  
-  // Click on scroll indicator
-  if (scrollIndicator) {
-    scrollIndicator.addEventListener('click', (e) => {
-      e.preventDefault();
-      revealContent();
-      window.scrollTo({ top: window.innerHeight, behavior: 'smooth' });
-    });
-  }
-  
-  // Check initial scroll position
-  if (window.scrollY > 50) {
-    revealContent();
-  }
-}
-
-// ─── Initialize map ────────────────────────────────────────────────────────
+// ─── Initialize Map ───────────────────────────────────────────────────────────
 function initMap() {
   const mapElement = document.getElementById("map");
   if (!mapElement) {
@@ -83,39 +37,78 @@ function initMap() {
     attribution: "© OpenStreetMap contributors"
   }).addTo(newMap);
   
-  markersLayer = L.markerClusterGroup({
-    maxClusterRadius: 50,
-    spiderfyOnMaxZoom: true,
-    showCoverageOnHover: false,
-    zoomToBoundsOnClick: true,
-    disableClusteringAtZoom: 12
-  }).addTo(newMap);
+  markersLayer = L.layerGroup().addTo(newMap);
   
   return newMap;
 }
 
-// ─── Show Results in Side Panel ───────────────────────────────────────────────
-function showResultsInPanel(politicians, isSearchResult = false) {
-  const resultsList = document.getElementById('results');
-  const panelEmpty = document.getElementById('panel-empty');
-  const statusMsg = document.getElementById('status');
-  const clearBtn = document.getElementById('clear-results-btn');
+// ─── Update Map Markers (with colored pins) ───────────────────────────────────
+function updateMapMarkers(politicians) {
+  if (!markersLayer || !map) return;
   
-  if (!resultsList) return;
+  markersLayer.clearLayers();
+  const bounds = [];
   
-  if (!politicians || politicians.length === 0) {
-    resultsList.innerHTML = '';
-    if (panelEmpty) panelEmpty.style.display = 'block';
-    if (statusMsg) statusMsg.style.display = 'none';
-    if (clearBtn) clearBtn.style.display = 'none';
-    return;
+  politicians.forEach(politician => {
+    let coords = window.getRidingCoordinates 
+      ? window.getRidingCoordinates(politician.district, politician.province)
+      : (window.ridingCoords && window.ridingCoords[politician.district]);
+    
+    if (!coords) return;
+    
+    let markerColor = "#c0392b";
+    if (politician.party) {
+      if (politician.party.includes("Liberal")) markerColor = "#d1001f";
+      else if (politician.party.includes("Conservative")) markerColor = "#1a4782";
+      else if (politician.party.includes("NDP")) markerColor = "#f48d2b";
+      else if (politician.party.includes("Green")) markerColor = "#3d9b35";
+      else if (politician.party.includes("Bloc")) markerColor = "#00b5e2";
+    }
+    
+    // Colored pin marker
+    const coloredIcon = L.divIcon({
+      className: 'custom-pin',
+      html: `<div style="position: relative; width: 25px; height: 41px;">
+        <svg width="25" height="41" viewBox="0 0 25 41" xmlns="http://www.w3.org/2000/svg">
+          <path d="M12.5 0C5.6 0 0 5.6 0 12.5C0 21.9 12.5 41 12.5 41C12.5 41 25 21.9 25 12.5C25 5.6 19.4 0 12.5 0Z" 
+                fill="${markerColor}" 
+                stroke="white" 
+                stroke-width="1.5"/>
+          <circle cx="12.5" cy="12.5" r="3.5" fill="white"/>
+        </svg>
+      </div>`,
+      iconSize: [25, 41],
+      popupAnchor: [0, -20],
+      iconAnchor: [12.5, 41]
+    });
+    
+    const popupContent = `
+      <div class="map-popup" onclick="window.showPoliticianModal('${escapeHtml(politician.name)}', '${escapeHtml(politician.party)}', '${escapeHtml(politician.district)}', '${escapeHtml(politician.province)}')">
+        <strong>${escapeHtml(politician.name)}</strong>
+        <div class="popup-party">${escapeHtml(politician.party)}</div>
+        <div class="popup-district">${escapeHtml(politician.district)}</div>
+      </div>
+    `;
+    
+    const marker = L.marker([coords.lat, coords.lng], { icon: coloredIcon })
+      .bindPopup(popupContent);
+    
+    markersLayer.addLayer(marker);
+    bounds.push([coords.lat, coords.lng]);
+  });
+  
+  if (bounds.length > 0 && map) {
+    map.fitBounds(bounds, { padding: [40, 40] });
   }
   
-  if (panelEmpty) panelEmpty.style.display = 'none';
-  if (statusMsg) statusMsg.style.display = 'block';
-  if (isSearchResult && clearBtn) clearBtn.style.display = 'inline-block';
+  console.log(`Map updated: ${bounds.length} markers`);
+}
+
+// ─── Display Results ──────────────────────────────────────────────────────────
+function displayResults(politicians) {
+  if (!resultsDiv) return;
   
-  resultsList.innerHTML = politicians.map(rep => {
+  resultsDiv.innerHTML = politicians.map(rep => {
     const imageUrl = rep.image ? `https://api.openparliament.ca${rep.image}` : null;
     
     let partyColor = "#e67e22";
@@ -144,7 +137,7 @@ function showResultsInPanel(politicians, isSearchResult = false) {
     `;
   }).join('');
   
-  document.querySelectorAll('.results-list .card').forEach(card => {
+  document.querySelectorAll('.card').forEach(card => {
     card.addEventListener('click', () => {
       const politician = {
         name: card.dataset.name,
@@ -158,39 +151,13 @@ function showResultsInPanel(politicians, isSearchResult = false) {
   });
 }
 
-// ─── Clear Results ────────────────────────────────────────────────────────────
-function clearResults() {
-  const resultsList = document.getElementById('results');
-  const panelEmpty = document.getElementById('panel-empty');
-  const clearBtn = document.getElementById('clear-results-btn');
-  const statusMsg = document.getElementById('status');
-  
-  if (resultsList) resultsList.innerHTML = '';
-  if (panelEmpty) panelEmpty.style.display = 'block';
-  if (clearBtn) clearBtn.style.display = 'none';
-  if (statusMsg) statusMsg.style.display = 'none';
-  
-  if (searchInput) searchInput.value = '';
-  currentQuery = '';
-  currentProvince = '';
-  if (provinceFilter) provinceFilter.value = '';
-}
-
-// ─── Clear button handler ─────────────────────────────────────────────────────
-const clearBtn = document.getElementById('clear-results-btn');
-if (clearBtn) {
-  clearBtn.addEventListener('click', () => {
-    clearResults();
-    if (map) map.setView([56.1304, -106.3468], 4);
-  });
-}
-
-// ─── Main fetch function ──────────────────────────────────────────────────────
+// ─── Fetch Politicians ────────────────────────────────────────────────────────
 async function fetchPoliticians(query = "", province = "", offset = 0) {
-  const statusMsg = document.getElementById('status');
-  if (!statusMsg) return;
+  if (!statusDiv) return;
   
-  statusMsg.innerHTML = '<div class="loading-spinner"><i class="fas fa-spinner fa-spin"></i> Loading...</div>';
+  statusDiv.innerHTML = '<div class="loading-spinner"><i class="fas fa-spinner fa-spin"></i> Loading...</div>';
+  if (resultsDiv) resultsDiv.innerHTML = "";
+  if (paginationDiv) paginationDiv.innerHTML = "";
   
   const params = new URLSearchParams({ limit: LIMIT, offset });
   if (query) params.set("name", query);
@@ -206,110 +173,135 @@ async function fetchPoliticians(query = "", province = "", offset = 0) {
     currentOffset = data.offset;
     
     if (!politicians.length) {
-      statusMsg.innerHTML = '<p class="empty">No politicians found. Try adjusting your search.</p>';
-      showResultsInPanel([], true);
+      statusDiv.innerHTML = '<p class="empty">No politicians found. Try adjusting your search.</p>';
       if (markersLayer) markersLayer.clearLayers();
       return;
     }
     
     const from = offset + 1;
     const to = Math.min(offset + LIMIT, totalCount);
-    statusMsg.innerHTML = `Found ${totalCount} result${totalCount !== 1 ? "s" : ""} — showing ${from}–${to}`;
+    statusDiv.innerHTML = `Found ${totalCount} result${totalCount !== 1 ? "s" : ""} — showing ${from}–${to}`;
     
-    showResultsInPanel(politicians, true);
+    displayResults(politicians);
     updateMapMarkers(politicians);
     renderPagination();
     
   } catch (err) {
     console.error(err);
-    statusMsg.innerHTML = `<p class="error">⚠️ ${err.message}</p>`;
+    statusDiv.innerHTML = `<p class="error">⚠️ ${err.message}</p>`;
   }
 }
 
-// ─── Update map markers ───────────────────────────────────────────────────────
-function updateMapMarkers(politicians) {
-  if (!markersLayer || !map) return;
-  
-  markersLayer.clearLayers();
-  const markers = [];
-  const bounds = [];
-  
-  politicians.forEach(politician => {
-    let coords = window.getRidingCoordinates 
-      ? window.getRidingCoordinates(politician.district, politician.province)
-      : (window.ridingCoords && window.ridingCoords[politician.district]);
-    
-    if (!coords) return;
-    
-    // Get party color for the pin
-    let markerColor = "#c0392b";
-    if (politician.party) {
-      if (politician.party.includes("Liberal")) markerColor = "#d1001f";
-      else if (politician.party.includes("Conservative")) markerColor = "#1a4782";
-      else if (politician.party.includes("NDP")) markerColor = "#f48d2b";
-      else if (politician.party.includes("Green")) markerColor = "#3d9b35";
-      else if (politician.party.includes("Bloc")) markerColor = "#00b5e2";
-    }
-    
-    // Create custom colored pin using Leaflet's default marker shape
-    const coloredPinIcon = L.divIcon({
-      className: 'custom-pin',
-      html: `<div style="position: relative; width: 25px; height: 41px;">
-        <svg width="25" height="41" viewBox="0 0 25 41" xmlns="http://www.w3.org/2000/svg">
-          <path d="M12.5 0C5.6 0 0 5.6 0 12.5C0 21.9 12.5 41 12.5 41C12.5 41 25 21.9 25 12.5C25 5.6 19.4 0 12.5 0Z" 
-                fill="${markerColor}" 
-                stroke="white" 
-                stroke-width="1.5"/>
-          <circle cx="12.5" cy="12.5" r="3.5" fill="white"/>
-        </svg>
-      </div>`,
-      iconSize: [25, 41],
-      popupAnchor: [0, -20],
-      iconAnchor: [12.5, 41]
-    });
-    
-    const popupContent = `
-      <div class="map-popup" onclick="window.showPoliticianModal('${escapeHtml(politician.name)}', '${escapeHtml(politician.party)}', '${escapeHtml(politician.district)}', '${escapeHtml(politician.province)}')">
-        <strong>${escapeHtml(politician.name)}</strong>
-        <div class="popup-party" style="color: ${markerColor}; font-weight: bold;">
-          ${escapeHtml(politician.party)}
-        </div>
-        <div class="popup-district">${escapeHtml(politician.district)}</div>
-      </div>
-    `;
-    
-    const marker = L.marker([coords.lat, coords.lng], { icon: coloredPinIcon })
-      .bindPopup(popupContent);
-    
-    markers.push(marker);
-    bounds.push([coords.lat, coords.lng]);
+// ─── Province Filter ──────────────────────────────────────────────────────────
+if (provinceFilter) {
+  provinceFilter.addEventListener("change", () => {
+    currentProvince = provinceFilter.value;
+    currentQuery = "";
+    if (searchInput) searchInput.value = "";
+    currentOffset = 0;
+    closeDropdown();
+    fetchPoliticians("", currentProvince, 0);
   });
-  
-  markersLayer.addLayers(markers);
-  if (bounds.length > 0 && map) {
-    map.fitBounds(bounds, { padding: [40, 40] });
-  }
-  
-  console.log(`Map updated: ${markers.length} markers added`);
 }
 
-// ─── Quick Filters ────────────────────────────────────────────────────────────
-function initQuickFilters() {
-  const quickFilters = document.querySelectorAll('.quick-filter');
-  quickFilters.forEach(btn => {
-    btn.addEventListener('click', () => {
-      const province = btn.dataset.province;
-      quickFilters.forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      if (provinceFilter) {
-        provinceFilter.value = province;
-        provinceFilter.dispatchEvent(new Event('change'));
-      }
+// ─── Autocomplete ─────────────────────────────────────────────────────────────
+function fetchSuggestions(query) {
+  if (!query || query.length < 2) {
+    closeDropdown();
+    return;
+  }
+  
+  const q = query.toLowerCase();
+  const filtered = allReps
+    .filter(p => p.name.toLowerCase().includes(q) || p.district.toLowerCase().includes(q))
+    .slice(0, 8);
+  
+  showDropdown(filtered, query);
+}
+
+function showDropdown(politicians, query) {
+  if (!dropdown) return;
+  if (!politicians.length) { closeDropdown(); return; }
+  
+  activeIndex = -1;
+  dropdown.innerHTML = politicians.map((p, i) => `
+    <li data-index="${i}" data-name="${escapeHtml(p.name)}">
+      <span class="suggestion-name">${highlight(p.name, query)}</span>
+      <span class="suggestion-district">${escapeHtml(p.district)}${p.province ? `, ${p.province}` : ""}</span>
+    </li>
+  `).join("");
+  dropdown.hidden = false;
+  
+  dropdown.querySelectorAll("li").forEach(li => {
+    li.addEventListener("mousedown", e => {
+      e.preventDefault();
+      selectSuggestion(li.dataset.name);
     });
   });
 }
 
-// ─── Show Politician Modal ────────────────────────────────────────────────────
+function closeDropdown() {
+  if (dropdown) {
+    dropdown.hidden = true;
+    dropdown.innerHTML = "";
+  }
+  activeIndex = -1;
+}
+
+function selectSuggestion(name) {
+  if (searchInput) searchInput.value = name;
+  currentQuery = name;
+  currentOffset = 0;
+  closeDropdown();
+  fetchPoliticians(currentQuery, currentProvince, 0);
+}
+
+function highlight(text, query) {
+  const esc = query.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  return escapeHtml(text).replace(new RegExp(`(${esc})`, "gi"), "<mark>$1</mark>");
+}
+
+// ─── Helper Functions ─────────────────────────────────────────────────────────
+function escapeHtml(str) {
+  if (!str) return "";
+  return str
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
+function getInitials(name) {
+  if (!name) return "?";
+  return name.trim().split(/\s+/).map(p => p[0]).join("").slice(0, 2).toUpperCase();
+}
+
+function renderPagination() {
+  if (!paginationDiv) return;
+  
+  const hasPrev = currentOffset > 0;
+  const hasNext = currentOffset + LIMIT < totalCount;
+  const totalPages = Math.ceil(totalCount / LIMIT);
+  const curPage = Math.floor(currentOffset / LIMIT) + 1;
+  
+  if (!hasPrev && !hasNext) {
+    paginationDiv.innerHTML = "";
+    return;
+  }
+  
+  paginationDiv.innerHTML = `
+    <button class="page-btn" id="prev-btn" ${hasPrev ? "" : "disabled"}>← Previous</button>
+    <span id="page-info">Page ${curPage} of ${totalPages}</span>
+    <button class="page-btn" id="next-btn" ${hasNext ? "" : "disabled"}>Next →</button>
+  `;
+  
+  document.getElementById("prev-btn")?.addEventListener("click", () => 
+    fetchPoliticians(currentQuery, currentProvince, currentOffset - LIMIT));
+  document.getElementById("next-btn")?.addEventListener("click", () => 
+    fetchPoliticians(currentQuery, currentProvince, currentOffset + LIMIT));
+}
+
+// ─── Modal Functions ──────────────────────────────────────────────────────────
 function showPoliticianModalWithData(politician) {
   const name = politician.name;
   const party = politician.party;
@@ -350,11 +342,9 @@ function showPoliticianModalWithData(politician) {
       if (imageUrl) {
         photoDiv.innerHTML = `<img src="${imageUrl}" alt="${escapeHtml(name)}" style="width: 100px; height: 100px; border-radius: 50%; object-fit: cover; border: 3px solid #c0392b;">`;
       } else {
-        photoDiv.innerHTML = `<div class="modal-initials" style="width: 100px; height: 100px; border-radius: 50%; background: #c0392b; color: white; display: flex; align-items: center; justify-content: center; margin: 0 auto; font-size: 2rem; font-weight: bold;">${getInitials(name)}</div>`;
+        photoDiv.innerHTML = `<div class="modal-initials">${getInitials(name)}</div>`;
       }
       modalBody.insertBefore(photoDiv, modalBody.firstChild);
-    } else if (imageUrl) {
-      existingPhoto.innerHTML = `<img src="${imageUrl}" alt="${escapeHtml(name)}" style="width: 100px; height: 100px; border-radius: 50%; object-fit: cover; border: 3px solid #c0392b;">`;
     }
   }
   
@@ -371,12 +361,9 @@ window.showPoliticianModal = (name, party, district, province) => {
   }
 };
 
-// ─── Fetch Quotes ─────────────────────────────────────────────────────────────
 async function fetchQuotesForPolitician(name) {
   const modalQuotes = document.getElementById("modal-quotes-text");
   if (!modalQuotes) return;
-  
-  modalQuotes.innerHTML = '<div class="loading-spinner"><i class="fas fa-spinner fa-spin"></i> Loading speeches from Hansard...</div>';
   
   try {
     const response = await fetch(`/api/quotes?politician=${encodeURIComponent(name)}&t=${Date.now()}`);
@@ -387,155 +374,28 @@ async function fetchQuotesForPolitician(name) {
     if (data.objects && data.objects.length > 0) {
       const quotesHtml = data.objects.map(statement => {
         let text = statement.text?.en || "";
-        if (!text || text === "No text available") return "";
         const date = statement.date || "";
         return `
-          <blockquote style="margin: 16px 0; padding: 16px; background: #f9f9f9; border-left: 4px solid #c0392b; border-radius: 8px;">
-            <i class="fas fa-quote-left" style="color: #c0392b; margin-right: 8px; opacity: 0.5; float: left;"></i>
-            <div style="margin-left: 24px;">
-              "${escapeHtml(text)}"
-              ${date ? `<footer style="margin-top: 12px; font-size: 11px; color: #999;">📅 ${date}</footer>` : ''}
-            </div>
+          <blockquote>
+            "${escapeHtml(text)}"
+            ${date ? `<footer>📅 ${date}</footer>` : ''}
           </blockquote>
         `;
       }).join('');
-      modalQuotes.innerHTML = quotesHtml || '<p>No recent speeches found.</p>';
+      modalQuotes.innerHTML = quotesHtml;
     } else {
       modalQuotes.innerHTML = '<p>No recent speeches found for this representative.</p>';
     }
   } catch (error) {
     console.error("Error fetching speeches:", error);
-    modalQuotes.innerHTML = '<p style="color: #c0392b;">Unable to load speeches at this time.</p>';
+    modalQuotes.innerHTML = '<p>Unable to load speeches at this time.</p>';
   }
 }
 
-// ─── Helper Functions ─────────────────────────────────────────────────────────
-function escapeHtml(str) {
-  if (!str) return "";
-  return str.replace(/[&<>]/g, function(m) {
-    if (m === '&') return '&amp;';
-    if (m === '<') return '&lt;';
-    if (m === '>') return '&gt;';
-    return m;
-  });
-}
-
-function getInitials(name) {
-  if (!name) return "?";
-  return name.trim().split(/\s+/).map(p => p[0]).join("").slice(0, 2).toUpperCase();
-}
-
-function renderPagination() {
-  const paginationDiv = document.getElementById('pagination');
-  if (!paginationDiv) return;
-  
-  const hasPrev = currentOffset > 0;
-  const hasNext = currentOffset + LIMIT < totalCount;
-  const totalPages = Math.ceil(totalCount / LIMIT);
-  const curPage = Math.floor(currentOffset / LIMIT) + 1;
-  
-  if (!hasPrev && !hasNext) {
-    paginationDiv.innerHTML = "";
-    return;
-  }
-  
-  paginationDiv.innerHTML = `
-    <button class="page-btn" id="prev-btn" ${hasPrev ? "" : "disabled"}>← Previous</button>
-    <span id="page-info">Page ${curPage} of ${totalPages}</span>
-    <button class="page-btn" id="next-btn" ${hasNext ? "" : "disabled"}>Next →</button>
-  `;
-  
-  document.getElementById("prev-btn")?.addEventListener("click", () => 
-    fetchPoliticians(currentQuery, currentProvince, currentOffset - LIMIT));
-  document.getElementById("next-btn")?.addEventListener("click", () => 
-    fetchPoliticians(currentQuery, currentProvince, currentOffset + LIMIT));
-}
-
-// ─── Province Filter ──────────────────────────────────────────────────────────
-if (provinceFilter) {
-  provinceFilter.addEventListener("change", async () => {
-    currentProvince = provinceFilter.value;
-    currentQuery = "";
-    if (searchInput) searchInput.value = "";
-    currentOffset = 0;
-    closeDropdown();
-    
-    const statusMsg = document.getElementById('status');
-    if (statusMsg) statusMsg.innerHTML = '<div class="loading-spinner"><i class="fas fa-spinner fa-spin"></i> Loading...</div>';
-    
-    await fetchPoliticians("", currentProvince, 0);
-    
-    // Force map to update bounds after markers are added
-    setTimeout(() => {
-      if (map && markersLayer) {
-        const bounds = [];
-        markersLayer.eachLayer(layer => {
-          if (layer.getLatLng) bounds.push(layer.getLatLng());
-        });
-        if (bounds.length > 0) map.fitBounds(bounds, { padding: [40, 40] });
-      }
-    }, 100);
-  });
-}
-
-// ─── Autocomplete ─────────────────────────────────────────────────────────────
-function fetchSuggestions(query) {
-  if (!query || query.length < 2) {
-    closeDropdown();
-    return;
-  }
-  
-  const q = query.toLowerCase();
-  
-  // Make sure allReps is loaded
-  if (!allReps || allReps.length === 0) {
-    console.log('Waiting for data to load...');
-    return;
-  }
-  
-  const filtered = allReps
-    .filter(p => p.name.toLowerCase().includes(q) || p.district.toLowerCase().includes(q))
-    .slice(0, 8);
-  
-  console.log(`Found ${filtered.length} suggestions for "${query}"`);
-  showDropdown(filtered, query);
-}
-
-function showDropdown(politicians, query) {
-  if (!dropdown) return;
-  if (!politicians.length) { closeDropdown(); return; }
-  
-  activeIndex = -1;
-  dropdown.innerHTML = politicians.map((p, i) => `
-    <li data-index="${i}" data-name="${escapeHtml(p.name)}">
-      <span class="suggestion-name">${highlight(p.name, query)}</span>
-      <span class="suggestion-district">${escapeHtml(p.district)}${p.province ? `, ${p.province}` : ""}</span>
-    </li>
-  `).join("");
-  dropdown.hidden = false;
-  
-  dropdown.querySelectorAll("li").forEach(li => {
-    li.addEventListener("mousedown", e => { e.preventDefault(); selectSuggestion(li.dataset.name); });
-  });
-}
-
-function closeDropdown() {
-  if (dropdown) { dropdown.hidden = true; dropdown.innerHTML = ""; }
-  activeIndex = -1;
-}
-
-function selectSuggestion(name) {
-  if (searchInput) searchInput.value = name;
-  currentQuery = name;
-  currentOffset = 0;
-  closeDropdown();
-  fetchPoliticians(currentQuery, currentProvince, 0);
-}
-
-function highlight(text, query) {
-  const esc = query.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-  return escapeHtml(text).replace(new RegExp(`(${esc})`, "gi"), "<mark>$1</mark>");
-}
+function closeModalFunction() { if (modal) modal.style.display = 'none'; }
+if (closeModal) closeModal.addEventListener("click", closeModalFunction);
+if (modal) modal.addEventListener("click", (e) => { if (e.target === modal) closeModalFunction(); });
+document.addEventListener("keydown", (e) => { if (e.key === "Escape" && modal?.style.display === 'flex') closeModalFunction(); });
 
 // ─── Keyboard Navigation ──────────────────────────────────────────────────────
 if (searchInput) {
@@ -551,7 +411,6 @@ if (searchInput) {
         return;
       } else if (e.key === "Escape") { closeDropdown(); return; }
       items.forEach((li, i) => li.classList.toggle("active", i === activeIndex));
-      if (activeIndex >= 0) items[activeIndex].scrollIntoView({ block: "nearest" });
     } else if (e.key === "Enter") {
       currentQuery = searchInput.value.trim();
       currentOffset = 0;
@@ -571,8 +430,7 @@ if (searchInput) {
 if (useLocationBtn) {
   useLocationBtn.addEventListener("click", () => {
     if ("geolocation" in navigator) {
-      const statusMsg = document.getElementById('status');
-      if (statusMsg) statusMsg.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Getting your location...';
+      statusDiv.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Getting your location...';
       navigator.geolocation.getCurrentPosition(
         async (position) => {
           const { latitude, longitude } = position.coords;
@@ -581,9 +439,8 @@ if (useLocationBtn) {
         },
         (error) => {
           console.error("Geolocation error:", error);
-          const statusMsg = document.getElementById('status');
-          if (statusMsg) statusMsg.innerHTML = '<p class="error">Unable to get your location. Please search manually.</p>';
-          setTimeout(() => { if (statusMsg) statusMsg.innerHTML = ""; }, 3000);
+          statusDiv.innerHTML = '<p class="error">Unable to get your location.</p>';
+          setTimeout(() => { statusDiv.innerHTML = ""; }, 3000);
         }
       );
     }
@@ -592,8 +449,7 @@ if (useLocationBtn) {
 
 async function findNearestDistrict(lat, lng) {
   if (!window.ridingCoords) return;
-  const statusMsg = document.getElementById('status');
-  if (statusMsg) statusMsg.innerHTML = '<i class="fas fa-search"></i> Finding your electoral district...';
+  statusDiv.innerHTML = '<i class="fas fa-search"></i> Finding your electoral district...';
   
   let nearestDistrict = null;
   let minDistance = Infinity;
@@ -603,27 +459,17 @@ async function findNearestDistrict(lat, lng) {
   }
   
   if (nearestDistrict && searchInput) {
-    if (statusMsg) statusMsg.innerHTML = `<i class="fas fa-check-circle"></i> Found district: ${nearestDistrict}`;
+    statusDiv.innerHTML = `<i class="fas fa-check-circle"></i> Found district: ${nearestDistrict}`;
     searchInput.value = nearestDistrict;
     currentQuery = nearestDistrict;
     currentOffset = 0;
     fetchPoliticians(currentQuery, currentProvince, 0);
-    setTimeout(() => { if (statusMsg) statusMsg.innerHTML = ""; }, 3000);
+    setTimeout(() => { statusDiv.innerHTML = ""; }, 3000);
   }
 }
 
-// ─── Close Modal ──────────────────────────────────────────────────────────────
-function closeModalFunction() { if (modal) modal.style.display = 'none'; }
-if (closeModal) closeModal.addEventListener("click", closeModalFunction);
-if (modal) modal.addEventListener("click", (e) => { if (e.target === modal) closeModalFunction(); });
-document.addEventListener("keydown", (e) => { if (e.key === "Escape" && modal?.style.display === 'flex') closeModalFunction(); });
-
-// ─── Init ─────────────────────────────────────────────────────────────────────
+// ─── Initialize ───────────────────────────────────────────────────────────────
 async function init() {
-  const mapElement = document.getElementById('map');
-  if (mapElement) mapElement.style.opacity = '0.5';
-  
-  initScrollAnimation();
   map = initMap();
   if (modal) modal.style.display = 'none';
   
@@ -631,11 +477,12 @@ async function init() {
     const res = await fetch("/api/politicians?limit=400");
     const data = await res.json();
     allReps = data.politicians || [];
-  } catch (error) { console.error("Failed to load initial data:", error); }
+    console.log(`Loaded ${allReps.length} politicians for autocomplete`);
+  } catch (error) {
+    console.error("Failed to load initial data:", error);
+  }
   
-  await fetchPoliticians();
-  if (mapElement) mapElement.style.opacity = '1';
-  initQuickFilters();
+  fetchPoliticians();
 }
 
 if (document.readyState === 'loading') {
