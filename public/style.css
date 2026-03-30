@@ -20,15 +20,9 @@ body {
 }
 
 .main-header h1 {
-  font-size: 2.0rem;
+  font-size: 2.5rem;
   font-weight: 700;
   color: #1a202c;
-}
-
-.main-header .accent {
-  color: #c0392b;
-  position: relative;
-  display: inline-block;
 }
 
 .main-header .accent::after {
@@ -44,7 +38,7 @@ body {
 .main-header p {
   font-size: 0.9rem;
   color: #666;
-  margin-top: 6px;
+  margin-top: 8px;
   font-style: italic;
 }
 
