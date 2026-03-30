@@ -26,6 +26,7 @@ let map;
 // ─── Scroll Animation for Hero Section ───────────────────────────────────────
 function initScrollAnimation() {
   const hero = document.getElementById('hero');
+  const stickyHeader = document.getElementById('sticky-header');
   const scrollIndicator = document.querySelector('.scroll-indicator');
   
   function hideHero() {
@@ -34,11 +35,22 @@ function initScrollAnimation() {
     }
   }
   
+  function handleStickyHeader() {
+    if (stickyHeader) {
+      if (window.scrollY > window.innerHeight - 100) {
+        stickyHeader.classList.add('visible');
+      } else {
+        stickyHeader.classList.remove('visible');
+      }
+    }
+  }
+  
   // Hide hero when scrolling down
   window.addEventListener('scroll', () => {
     if (window.scrollY > 10) {
       hideHero();
     }
+    handleStickyHeader();
   });
   
   // Click on scroll indicator
@@ -52,6 +64,9 @@ function initScrollAnimation() {
       });
     });
   }
+  
+  // Initial check
+  handleStickyHeader();
 }
 
 async function init() {
