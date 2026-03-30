@@ -67,26 +67,27 @@ function initScrollAnimation() {
   
   if (!hero) return;
   
-  // Hide hero on any scroll
   function hideHero() {
     if (hero && !hero.classList.contains('hide-hero')) {
       hero.classList.add('hide-hero');
     }
   }
   
-  // Show/hide sticky header based on scroll position
   function updateStickyHeader() {
     if (!stickyHeader) return;
     
-    // Show sticky header when scrolled down more than 100px
-    if (window.pageYOffset > 100) {
+    // Only show sticky header AFTER the hero is hidden
+    const heroHidden = hero.classList.contains('hide-hero');
+    const scrolledPastHero = window.pageYOffset > window.innerHeight - 100;
+    
+    if (heroHidden || scrolledPastHero) {
       stickyHeader.classList.add('visible');
     } else {
       stickyHeader.classList.remove('visible');
     }
   }
   
-  // Scroll event listener
+  // Scroll event
   window.addEventListener('scroll', function() {
     if (window.pageYOffset > 10) {
       hideHero();
