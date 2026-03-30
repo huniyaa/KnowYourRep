@@ -34,6 +34,30 @@ let activeIndex = -1;
 let allReps = [];
 let map;
 
+// Debug: Check if sticky header exists
+console.log('Sticky header element:', document.getElementById('sticky-header'));
+console.log('Hero element:', document.getElementById('hero'));
+
+// Simple scroll test for sticky header
+window.addEventListener('scroll', function() {
+  const stickyHeader = document.getElementById('sticky-header');
+  const hero = document.getElementById('hero');
+  
+  console.log('Scroll position:', window.pageYOffset);
+  
+  if (stickyHeader) {
+    if (window.pageYOffset > 100) {
+      stickyHeader.classList.add('visible');
+      console.log('Sticky header should be visible');
+    } else {
+      stickyHeader.classList.remove('visible');
+    }
+  }
+  
+  if (hero && window.pageYOffset > 10) {
+    hero.classList.add('hide-hero');
+  }
+});
 
 // ─── Scroll Animation for Hero Section ───────────────────────────────────────
 function initScrollAnimation() {
