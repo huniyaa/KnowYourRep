@@ -22,6 +22,70 @@ let activeIndex = -1;
 let allReps = [];
 let map;
 
+// ─── Scroll Animation for Hero Section ───────────────────────────────────────
+function initScrollAnimation() {
+  const hero = document.getElementById('hero');
+  const appContent = document.getElementById('app-content');
+  const scrollIndicator = document.querySelector('.scroll-indicator');
+  
+  function revealContent() {
+    if (hero && appContent) {
+      hero.classList.add('hide-hero');
+      // No need to hide/show app-content, it's always visible below hero
+    }
+  }
+  
+  // Mouse wheel scroll
+  window.addEventListener('wheel', (e) => {
+    if (e.deltaY > 0) { // Scrolling down
+      revealContent();
+    }
+  });
+  
+  // Regular scroll
+  window.addEventListener('scroll', () => {
+    if (window.scrollY > 50) {
+      revealContent();
+    }
+  });
+  
+  // Click on scroll indicator
+  if (scrollIndicator) {
+    scrollIndicator.addEventListener('click', (e) => {
+      e.preventDefault();
+      revealContent();
+      window.scrollTo({
+        top: window.innerHeight,
+        behavior: 'smooth'
+      });
+    });
+  }
+  
+  // Check initial scroll position
+  if (window.scrollY > 50) {
+    revealContent();
+  }
+}
+
+async function init() {
+  // Initialize scroll animation
+  initScrollAnimation();  // <-- ADD THIS LINE
+  
+  map = initMap();
+  if (modal) modal.style.display = 'none';
+  
+  try {
+    const res = await fetch("/api/politicians?limit=400");
+    const data = await res.json();
+    allReps = data.politicians || [];
+    console.log(`Loaded ${allReps.length} politicians for autocomplete`);
+  } catch (error) {
+    console.error("Failed to load initial data:", error);
+  }
+  
+  fetchPoliticians();
+}
+
 // ─── Initialize Map ───────────────────────────────────────────────────────────
 function initMap() {
   const mapElement = document.getElementById("map");

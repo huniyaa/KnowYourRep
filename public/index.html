@@ -10,41 +10,57 @@
   <link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
 </head>
 <body>
-  <header>
-    <h1><i class="fas fa-landmark"></i> Know Your Rep</h1>
-    <p>Discover your local political representatives beyond party lines</p>
-  </header>
-
-  <div id="controls">
-    <div id="search-wrapper">
-      <input type="text" id="search" placeholder="Search by name or district…" autocomplete="off" />
-      <ul id="dropdown" hidden></ul>
+  <!-- Hero Section -->
+  <section id="hero">
+    <div class="hero-content">
+      <h1 class="hero-title">
+        Know <span class="underlined">Your</span> Rep
+      </h1>
+      <div class="scroll-indicator">
+        <span class="scroll-text">Scroll to explore</span>
+        <i class="fas fa-chevron-down scroll-arrow"></i>
+      </div>
     </div>
-    <select id="province-filter">
-      <option value="">All provinces</option>
-      <option value="AB">Alberta</option>
-      <option value="BC">British Columbia</option>
-      <option value="MB">Manitoba</option>
-      <option value="NB">New Brunswick</option>
-      <option value="NL">Newfoundland and Labrador</option>
-      <option value="NS">Nova Scotia</option>
-      <option value="NT">Northwest Territories</option>
-      <option value="NU">Nunavut</option>
-      <option value="ON">Ontario</option>
-      <option value="PE">Prince Edward Island</option>
-      <option value="QC">Quebec</option>
-      <option value="SK">Saskatchewan</option>
-      <option value="YT">Yukon</option>
-    </select>
-    <button id="use-location" class="location-btn">
-      <i class="fas fa-location-dot"></i> My Location
-    </button>
-  </div>
+  </section>
 
-  <div id="status"></div>
-  <div id="map"></div>
-  <div id="results"></div>
-  <div id="pagination"></div>
+  <!-- Main App Content -->
+  <div id="app-content">
+    <header>
+      <h1><i class="fas fa-landmark"></i> Know Your Rep</h1>
+      <p>Discover your local political representatives beyond party lines</p>
+    </header>
+
+    <div id="controls">
+      <div id="search-wrapper">
+        <input type="text" id="search" placeholder="Search by name or district…" autocomplete="off" />
+        <ul id="dropdown" hidden></ul>
+      </div>
+      <select id="province-filter">
+        <option value="">All provinces</option>
+        <option value="AB">Alberta</option>
+        <option value="BC">British Columbia</option>
+        <option value="MB">Manitoba</option>
+        <option value="NB">New Brunswick</option>
+        <option value="NL">Newfoundland and Labrador</option>
+        <option value="NS">Nova Scotia</option>
+        <option value="NT">Northwest Territories</option>
+        <option value="NU">Nunavut</option>
+        <option value="ON">Ontario</option>
+        <option value="PE">Prince Edward Island</option>
+        <option value="QC">Quebec</option>
+        <option value="SK">Saskatchewan</option>
+        <option value="YT">Yukon</option>
+      </select>
+      <button id="use-location" class="location-btn">
+        <i class="fas fa-location-dot"></i> My Location
+      </button>
+    </div>
+
+    <div id="status"></div>
+    <div id="map"></div>
+    <div id="results"></div>
+    <div id="pagination"></div>
+  </div>
 
   <!-- Politician Detail Modal -->
   <div id="politician-modal" class="modal">
