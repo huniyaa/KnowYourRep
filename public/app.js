@@ -29,44 +29,30 @@ function initScrollAnimation() {
   const stickyHeader = document.getElementById('sticky-header');
   const scrollIndicator = document.querySelector('.scroll-indicator');
   
+  if (!hero) return;
+  
+  // Hide hero on any scroll
   function hideHero() {
     if (hero && !hero.classList.contains('hide-hero')) {
       hero.classList.add('hide-hero');
     }
   }
   
+  // Show/hide sticky header based on scroll position
   function updateStickyHeader() {
     if (!stickyHeader) return;
     
-    // Get the hero's height (it takes full viewport)
-    const heroHeight = window.innerHeight;
-    
-    // Show sticky header when scrolled past the hero
-    if (window.scrollY > heroHeight - 80) {
+    // Show sticky header when scrolled down more than 100px
+    if (window.pageYOffset > 100) {
       stickyHeader.classList.add('visible');
     } else {
       stickyHeader.classList.remove('visible');
     }
-    
-    function updateStickyHeader() {
-  if (!stickyHeader) return;
-  
-  const heroHeight = window.innerHeight;
-  const scrollY = window.scrollY;
-  
-  console.log(`ScrollY: ${scrollY}, HeroHeight: ${heroHeight}, Show: ${scrollY > heroHeight - 80}`);
-  
-  if (scrollY > heroHeight - 80) {
-    stickyHeader.classList.add('visible');
-  } else {
-    stickyHeader.classList.remove('visible');
-  }
-}
   }
   
-  // Handle scroll events
-  window.addEventListener('scroll', () => {
-    if (window.scrollY > 10) {
+  // Scroll event listener
+  window.addEventListener('scroll', function() {
+    if (window.pageYOffset > 10) {
       hideHero();
     }
     updateStickyHeader();
@@ -74,7 +60,7 @@ function initScrollAnimation() {
   
   // Click on scroll indicator
   if (scrollIndicator) {
-    scrollIndicator.addEventListener('click', (e) => {
+    scrollIndicator.addEventListener('click', function(e) {
       e.preventDefault();
       hideHero();
       window.scrollTo({
