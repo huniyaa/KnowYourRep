@@ -9,6 +9,18 @@ const useLocationBtn = document.getElementById("use-location");
 const modal = document.getElementById("politician-modal");
 const closeModal = document.getElementById("close-modal");
 
+// Debug: Check if sticky header exists
+console.log('Sticky header element:', document.getElementById('sticky-header'));
+
+// Simple test: Show sticky header after 1 second
+setTimeout(() => {
+  const testHeader = document.getElementById('sticky-header');
+  if (testHeader) {
+    testHeader.classList.add('visible');
+    console.log('Sticky header shown via test');
+  }
+}, 1000);
+
 // ─── Variables ────────────────────────────────────────────────────────────────
 let markersLayer;
 let currentPoliticians = [];
