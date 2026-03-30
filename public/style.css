@@ -25,6 +25,12 @@ body {
   color: #1a202c;
 }
 
+.main-header .accent {
+  color: #c0392b;
+  position: relative;
+  display: inline-block;
+}
+
 .main-header .accent::after {
   content: '';
   position: absolute;
@@ -68,7 +74,7 @@ body {
 }
 
 #search:focus {
-  border-color: #c0392b;
+  border-color: #000000;
   box-shadow: 0 0 0 3px rgba(192, 57, 43, 0.1);
 }
 
