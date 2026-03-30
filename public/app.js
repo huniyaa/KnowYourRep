@@ -34,80 +34,9 @@ let activeIndex = -1;
 let allReps = [];
 let map;
 
-// Debug: Check if sticky header exists
-console.log('Sticky header element:', document.getElementById('sticky-header'));
-console.log('Hero element:', document.getElementById('hero'));
 
-// Simple scroll test for sticky header
-window.addEventListener('scroll', function() {
-  const stickyHeader = document.getElementById('sticky-header');
-  const hero = document.getElementById('hero');
-  
-  console.log('Scroll position:', window.pageYOffset);
-  
-  if (stickyHeader) {
-    if (window.pageYOffset > 100) {
-      stickyHeader.classList.add('visible');
-      console.log('Sticky header should be visible');
-    } else {
-      stickyHeader.classList.remove('visible');
-    }
-  }
-  
-  if (hero && window.pageYOffset > 10) {
-    hero.classList.add('hide-hero');
-  }
-});
 
-// ─── Scroll Animation for Hero Section ───────────────────────────────────────
-function initScrollAnimation() {
-  const hero = document.getElementById('hero');
-  const stickyHeader = document.getElementById('sticky-header');
-  const scrollIndicator = document.querySelector('.scroll-indicator');
   
-  if (!hero) return;
-  
-  function updateHeaderVisibility() {
-    if (!stickyHeader) return;
-    
-    // Show sticky header ONLY when hero is hidden
-    if (hero.classList.contains('hide-hero')) {
-      stickyHeader.classList.add('visible');
-    } else {
-      stickyHeader.classList.remove('visible');
-    }
-  }
-  
-  function hideHero() {
-    if (hero && !hero.classList.contains('hide-hero')) {
-      hero.classList.add('hide-hero');
-      updateHeaderVisibility(); // Immediately update header when hero hides
-    }
-  }
-  
-  // Scroll event - hide hero when scrolling
-  window.addEventListener('scroll', function() {
-    if (window.pageYOffset > 10) {
-      hideHero();
-    }
-  });
-  
-  // Click on scroll indicator
-  if (scrollIndicator) {
-    scrollIndicator.addEventListener('click', function(e) {
-      e.preventDefault();
-      hideHero();
-      window.scrollTo({
-        top: window.innerHeight,
-        behavior: 'smooth'
-      });
-    });
-  }
-  
-  // Initial check
-  updateHeaderVisibility();
-}
-
 async function init() {
   // Initialize scroll animation
   initScrollAnimation();  // <-- MAKE SURE THIS IS HERE
@@ -211,9 +140,23 @@ function updateMapMarkers(politicians) {
 
 // ─── Display Results ──────────────────────────────────────────────────────────
 function displayResults(politicians) {
-  if (!resultsDiv) return;
+  const resultsList = document.getElementById('results');
+  const panelEmpty = document.getElementById('panel-empty');
+  const clearBtn = document.getElementById('clear-results-btn');
   
-  resultsDiv.innerHTML = politicians.map(rep => {
+  if (!resultsList) return;
+  
+  if (!politicians || politicians.length === 0) {
+    resultsList.innerHTML = '';
+    if (panelEmpty) panelEmpty.style.display = 'block';
+    if (clearBtn) clearBtn.style.display = 'none';
+    return;
+  }
+  
+  if (panelEmpty) panelEmpty.style.display = 'none';
+  if (clearBtn) clearBtn.style.display = 'inline-block';
+  
+  resultsList.innerHTML = politicians.map(rep => {
     const imageUrl = rep.image ? `https://api.openparliament.ca${rep.image}` : null;
     
     let partyColor = "#e67e22";
@@ -242,7 +185,8 @@ function displayResults(politicians) {
     `;
   }).join('');
   
-  document.querySelectorAll('.card').forEach(card => {
+  // Add click handlers
+  document.querySelectorAll('.results-list .card').forEach(card => {
     card.addEventListener('click', () => {
       const politician = {
         name: card.dataset.name,
@@ -382,6 +326,7 @@ function getInitials(name) {
 }
 
 function renderPagination() {
+  const paginationDiv = document.querySelector('.panel-pagination');
   if (!paginationDiv) return;
   
   const hasPrev = currentOffset > 0;
@@ -396,7 +341,7 @@ function renderPagination() {
   
   paginationDiv.innerHTML = `
     <button class="page-btn" id="prev-btn" ${hasPrev ? "" : "disabled"}>← Previous</button>
-    <span id="page-info">Page ${curPage} of ${totalPages}</span>
+    <span>Page ${curPage} of ${totalPages}</span>
     <button class="page-btn" id="next-btn" ${hasNext ? "" : "disabled"}>Next →</button>
   `;
   

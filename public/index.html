@@ -10,69 +10,67 @@
   <link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
 </head>
 <body>
-  <!-- Hero Section -->
-  <section id="hero">
-    <div class="hero-content">
-      <h1 class="hero-title">
-        Know <span class="underlined">Your</span> Rep
-      </h1>
-      <div class="scroll-indicator">
-        <span class="scroll-text">Scroll to explore</span>
-        <i class="fas fa-chevron-down scroll-arrow"></i>
-      </div>
-    </div>
-  </section>
+  <!-- Simple Header - No scroll effects -->
+  <header class="main-header">
+    <h1>Know <span class="accent">Your</span> Rep</h1>
+    <p>Discover your local political representatives beyond party lines</p>
+  </header>
 
- <!-- Sticky Header (initially hidden, appears after scroll) -->
-<div id="sticky-header" class="sticky-header">
-  <div class="sticky-header-content">
-    <h2>Know <span class="underlined-small">Your</span> Rep</h2>
+  <!-- Controls -->
+  <div id="controls">
+    <div id="search-wrapper">
+      <input type="text" id="search" placeholder="Search by name or district…" autocomplete="off" />
+      <ul id="dropdown" hidden></ul>
+    </div>
+    <select id="province-filter">
+      <option value="">All provinces</option>
+      <option value="AB">Alberta</option>
+      <option value="BC">British Columbia</option>
+      <option value="MB">Manitoba</option>
+      <option value="NB">New Brunswick</option>
+      <option value="NL">Newfoundland and Labrador</option>
+      <option value="NS">Nova Scotia</option>
+      <option value="NT">Northwest Territories</option>
+      <option value="NU">Nunavut</option>
+      <option value="ON">Ontario</option>
+      <option value="PE">Prince Edward Island</option>
+      <option value="QC">Quebec</option>
+      <option value="SK">Saskatchewan</option>
+      <option value="YT">Yukon</option>
+    </select>
+    <button id="use-location" class="location-btn">
+      <i class="fas fa-location-dot"></i> My Location
+    </button>
   </div>
-</div>
 
-  <!-- Main App Content -->
-  <div id="app-content">
-    <header class="main-header">
-      <h1><i class="fas fa-landmark"></i> Know Your Rep</h1>
-      <p>Discover your local political representatives beyond party lines</p>
-    </header>
+  <div id="status"></div>
 
-    <div id="controls">
-      <div id="search-wrapper">
-        <input type="text" id="search" placeholder="Search by name or district…" autocomplete="off" />
-        <ul id="dropdown" hidden></ul>
-      </div>
-      <select id="province-filter">
-        <option value="">All provinces</option>
-        <option value="AB">Alberta</option>
-        <option value="BC">British Columbia</option>
-        <option value="MB">Manitoba</option>
-        <option value="NB">New Brunswick</option>
-        <option value="NL">Newfoundland and Labrador</option>
-        <option value="NS">Nova Scotia</option>
-        <option value="NT">Northwest Territories</option>
-        <option value="NU">Nunavut</option>
-        <option value="ON">Ontario</option>
-        <option value="PE">Prince Edward Island</option>
-        <option value="QC">Quebec</option>
-        <option value="SK">Saskatchewan</option>
-        <option value="YT">Yukon</option>
-      </select>
-      <button id="use-location" class="location-btn">
-        <i class="fas fa-location-dot"></i> My Location
-      </button>
+  <!-- Main Layout: Map + Side Panel -->
+  <div class="main-layout">
+    <div class="map-container">
+      <div id="map"></div>
     </div>
-
-    <div id="status"></div>
-    <div id="map"></div>
-    <div id="results"></div>
-    <div id="pagination"></div>
+    <div class="side-panel">
+      <div class="panel-header">
+        <h3><i class="fas fa-user-friends"></i> Representatives</h3>
+        <button id="clear-results-btn" class="clear-btn" style="display: none;">
+          <i class="fas fa-times"></i> Clear
+        </button>
+      </div>
+      <div id="results" class="results-list"></div>
+      <div id="pagination" class="panel-pagination"></div>
+      <div id="panel-empty" class="panel-empty">
+        <i class="fas fa-search"></i>
+        <p>Search by name or district, or click on a map marker</p>
+      </div>
+    </div>
   </div>
 
   <!-- Politician Detail Modal -->
   <div id="politician-modal" class="modal">
     <div class="modal-content">
       <div class="modal-header">
+        <div id="modal-politician-photo"></div>
         <h2 id="modal-name"></h2>
         <button id="close-modal" class="close-modal">&times;</button>
       </div>
