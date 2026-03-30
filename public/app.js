@@ -20,14 +20,14 @@ const LIMIT = 20;
 let debounceTimer = null;
 let activeIndex = -1;
 let allReps = [];
-let map; // Store map reference
+let map;
 
+// ─── Scroll Animation ────────────────────────────────────────────────────────
 function initScrollAnimation() {
   const hero = document.getElementById('hero');
   const appContent = document.getElementById('app-content');
   const scrollIndicator = document.querySelector('.scroll-indicator');
   
-  // Function to hide hero and show content
   function revealContent() {
     if (hero && appContent) {
       hero.classList.add('hide-hero');
@@ -35,93 +35,29 @@ function initScrollAnimation() {
     }
   }
   
-  // Listen for scroll
   window.addEventListener('scroll', () => {
-    if (window.scrollY > 50) {
-      revealContent();
-    }
+    if (window.scrollY > 50) revealContent();
   });
   
-  // Click on scroll indicator
   if (scrollIndicator) {
     scrollIndicator.addEventListener('click', (e) => {
       e.preventDefault();
       revealContent();
-      // Smooth scroll to content
-      window.scrollTo({
-        top: window.innerHeight,
-        behavior: 'smooth'
-      });
+      window.scrollTo({ top: window.innerHeight, behavior: 'smooth' });
     });
   }
   
-  // Also trigger if user has already scrolled
-  if (window.scrollY > 50) {
-    revealContent();
-  }
-}
-//Scroll 
-// Scroll animation and hero hide logic
-function initScrollAnimation() {
-  const hero = document.getElementById('hero');
-  const appContent = document.getElementById('app-content');
-  const scrollIndicator = document.querySelector('.scroll-indicator');
-  
-  // Function to hide hero and show content
-  function revealContent() {
-    if (hero && appContent) {
-      hero.classList.add('hide-hero');
-      appContent.classList.remove('hidden');
-    }
-  }
-  
-  // Listen for scroll
-  window.addEventListener('scroll', () => {
-    if (window.scrollY > 50) {
-      revealContent();
-    }
-  });
-  
-  // Click on scroll indicator
-  if (scrollIndicator) {
-    scrollIndicator.addEventListener('click', () => {
-      revealContent();
-      // Smooth scroll to content
-      window.scrollTo({
-        top: window.innerHeight,
-        behavior: 'smooth'
-      });
-    });
-  }
-  
-  // Also trigger if user scrolls immediately
-  if (window.scrollY > 50) {
-    revealContent();
-  }
+  if (window.scrollY > 50) revealContent();
 }
 
-// Call this after your init function or in DOMContentLoaded
-// Add this line to your existing init() function or call it separately
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', () => {
-    initScrollAnimation();
-    init(); // Your existing init function
-  });
-} else {
-  initScrollAnimation();
-  init();
-}
-
-// ─── Initialize map after DOM is ready ────────────────────────────────────────
+// ─── Initialize map ────────────────────────────────────────────────────────
 function initMap() {
-  // Check if map element exists
   const mapElement = document.getElementById("map");
   if (!mapElement) {
     console.error("Map element not found!");
     return null;
   }
   
-  // Create map
   const newMap = L.map("map").setView([56.1304, -106.3468], 4);
   
   L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
@@ -129,7 +65,6 @@ function initMap() {
     attribution: "© OpenStreetMap contributors"
   }).addTo(newMap);
   
-  // CHANGE THIS: Use marker cluster group instead of regular layer
   markersLayer = L.markerClusterGroup({
     maxClusterRadius: 50,
     spiderfyOnMaxZoom: true,
@@ -141,222 +76,27 @@ function initMap() {
   return newMap;
 }
 
-// Add clear button handler
-const clearBtn = document.getElementById('clear-results-btn');
-if (clearBtn) {
-  clearBtn.addEventListener('click', () => {
-    clearResults();
-    // Optionally reset map view
-    if (map) map.setView([56.1304, -106.3468], 4);
-  });
-}
-
-// ─── Main fetch function ──────────────────────────────────────────────────────
-
-async function fetchPoliticians(query = "", province = "", offset = 0) {
-  if (!statusDiv) return;
-  
-  statusDiv.innerHTML = '<div class="loading-spinner"><i class="fas fa-spinner fa-spin"></i> Loading...</div>';
-  
-  const params = new URLSearchParams({ limit: LIMIT, offset });
-  if (query) params.set("name", query);
-  if (province) params.set("province", province);
-  
-  try {
-    const res = await fetch(`/api/politicians?${params}`);
-    if (!res.ok) throw new Error(`Server error: ${res.status}`);
-    
-    const data = await res.json();
-    const politicians = data.politicians;
-    totalCount = data.count;
-    currentOffset = data.offset;
-    
-    if (!politicians.length) {
-      statusDiv.innerHTML = '<p class="empty">No politicians found. Try adjusting your search.</p>';
-      showResultsInPanel([], true);
-      if (markersLayer) markersLayer.clearLayers();
-      return;
-    }
-    
-    const from = offset + 1;
-    const to = Math.min(offset + LIMIT, totalCount);
-    statusDiv.innerHTML = `Found ${totalCount} result${totalCount !== 1 ? "s" : ""} — showing ${from}–${to}`;
-    
-    // Show results in side panel (not full page)
-    showResultsInPanel(politicians, true);
-    updateMapMarkers(politicians);
-    renderPagination();
-    
-  } catch (err) {
-    console.error(err);
-    statusDiv.innerHTML = `<p class="error">⚠️ ${err.message}</p>`;
-  }
-}
-
-// ─── Update map markers with colored classic markers ─────────────────────────
-function updateMapMarkers(politicians) {
-  if (!markersLayer || !map) return;
-  
-  // Clear existing markers
-  markersLayer.clearLayers();
-  const markers = [];
-  const bounds = [];
-  let markersAdded = 0;
-  
-  politicians.forEach(politician => {
-    let coords = window.getRidingCoordinates 
-      ? window.getRidingCoordinates(politician.district, politician.province)
-      : (window.ridingCoords && window.ridingCoords[politician.district]);
-    
-    if (!coords) return;
-    
-    markersAdded++;
-    
-    // Get party color
-    let markerColor = "#c0392b";
-    if (politician.party) {
-      if (politician.party.includes("Liberal")) markerColor = "#d1001f";
-      else if (politician.party.includes("Conservative")) markerColor = "#1a4782";
-      else if (politician.party.includes("NDP")) markerColor = "#f48d2b";
-      else if (politician.party.includes("Green")) markerColor = "#3d9b35";
-      else if (politician.party.includes("Bloc")) markerColor = "#00b5e2";
-    }
-    
-    // Create colored marker
-    const coloredIcon = L.divIcon({
-      className: 'colored-marker',
-      html: `<div style="
-        background-color: ${markerColor};
-        width: 24px;
-        height: 24px;
-        border-radius: 50%;
-        border: 2px solid white;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.3);
-        transition: transform 0.2s;
-        cursor: pointer;
-      "></div>`,
-      iconSize: [24, 24],
-      popupAnchor: [0, -12]
-    });
-    
-    const popupContent = `
-      <div class="map-popup" onclick="window.showPoliticianModal('${escapeHtml(politician.name)}', '${escapeHtml(politician.party)}', '${escapeHtml(politician.district)}', '${escapeHtml(politician.province)}')">
-        <strong>${escapeHtml(politician.name)}</strong>
-        <div class="popup-party" style="color: ${markerColor}; font-weight: bold;">
-          ${escapeHtml(politician.party)}
-        </div>
-        <div class="popup-district">${escapeHtml(politician.district)}</div>
-      </div>
-    `;
-    
-    const marker = L.marker([coords.lat, coords.lng], { icon: coloredIcon })
-      .bindPopup(popupContent);
-    
-    markers.push(marker);
-    bounds.push([coords.lat, coords.lng]);
-  });
-  
-  // Add all markers to the cluster group at once (faster)
-  markersLayer.addLayers(markers);
-  
-  if (bounds.length > 0 && map) {
-    map.fitBounds(bounds, { padding: [40, 40] });
-  }
-  
-  console.log(`Map updated: ${markersAdded} markers added`);
-}
-
-function initQuickFilters() {
-  const quickFilters = document.querySelectorAll('.quick-filter');
-  
-  quickFilters.forEach(btn => {
-    btn.addEventListener('click', () => {
-      const province = btn.dataset.province;
-      
-      // Update active state
-      quickFilters.forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      
-      // Update province filter dropdown
-      if (provinceFilter) {
-        provinceFilter.value = province;
-        // Trigger change event
-        const event = new Event('change');
-        provinceFilter.dispatchEvent(event);
-      }
-    });
-  });
-}
-
-// Call this after DOM is loaded
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', initQuickFilters);
-} else {
-  initQuickFilters();
-}
-
-// ─── Display results cards ────────────────────────────────────────────────────
-function displayResults(politicians) {
-  if (!resultsDiv) return;
-  
-  resultsDiv.innerHTML = politicians.map((rep, index) => {
-    const imageUrl = rep.image ? `https://api.openparliament.ca${rep.image}` : null;
-    
-    // Get party color for the card
-    let partyColor = "#e67e22"; // default orange-red
-    if (rep.party) {
-      if (rep.party.includes("Liberal")) partyColor = "#c0392b";
-      else if (rep.party.includes("Conservative")) partyColor = "#1a4782";
-      else if (rep.party.includes("NDP")) partyColor = "#e67e22";
-      else if (rep.party.includes("Green")) partyColor = "#2ecc71";
-      else if (rep.party.includes("Bloc")) partyColor = "#3498db";
-      else partyColor = "#95a5a6";
-    }
-    
-    return `
-      <div class="card" data-name="${escapeHtml(rep.name)}" data-party="${escapeHtml(rep.party)}" data-district="${escapeHtml(rep.district)}" data-province="${escapeHtml(rep.province)}" data-image="${imageUrl || ''}">
-        <div class="avatar">
-          ${imageUrl ? 
-            `<img src="${imageUrl}" alt="${escapeHtml(rep.name)}" class="mp-photo" onerror="this.onerror=null; this.parentElement.innerHTML='${getInitials(rep.name)}';">` : 
-            getInitials(rep.name)
-          }
-        </div>
-        <div class="info">
-          <h3>${escapeHtml(rep.name)}</h3>
-          <p class="party" style="color: ${partyColor};">${escapeHtml(rep.party)}</p>
-          <p class="district">${escapeHtml(rep.district)}${rep.province ? `, ${rep.province}` : ""}</p>
-        </div>
-      </div>
-    `;
-  }).join('');
-
-  function showResultsInPanel(politicians, isSearchResult = false) {
+// ─── Show Results in Side Panel ───────────────────────────────────────────────
+function showResultsInPanel(politicians, isSearchResult = false) {
   const resultsList = document.getElementById('results');
   const panelEmpty = document.getElementById('panel-empty');
   const statusMsg = document.getElementById('status');
-  const showAllBtn = document.getElementById('show-all-btn');
-  const clearBtn = document.getElementById('clear-btn');
+  const clearBtn = document.getElementById('clear-results-btn');
   
   if (!resultsList) return;
   
   if (!politicians || politicians.length === 0) {
     resultsList.innerHTML = '';
-    panelEmpty.style.display = 'block';
+    if (panelEmpty) panelEmpty.style.display = 'block';
     if (statusMsg) statusMsg.style.display = 'none';
-    if (showAllBtn) showAllBtn.style.display = 'none';
     if (clearBtn) clearBtn.style.display = 'none';
     return;
   }
   
-  panelEmpty.style.display = 'none';
+  if (panelEmpty) panelEmpty.style.display = 'none';
   if (statusMsg) statusMsg.style.display = 'block';
+  if (isSearchResult && clearBtn) clearBtn.style.display = 'inline-block';
   
-  // Show clear button if this is a search result
-  if (isSearchResult && clearBtn) {
-    clearBtn.style.display = 'inline-block';
-  }
-  
-  // Render the politicians
   resultsList.innerHTML = politicians.map(rep => {
     const imageUrl = rep.image ? `https://api.openparliament.ca${rep.image}` : null;
     
@@ -386,130 +126,155 @@ function displayResults(politicians) {
     `;
   }).join('');
   
-  // Add click handlers to cards
   document.querySelectorAll('.results-list .card').forEach(card => {
     card.addEventListener('click', () => {
-      const name = card.dataset.name;
-      const party = card.dataset.party;
-      const district = card.dataset.district;
-      const province = card.dataset.province;
-      const imageUrl = card.dataset.image;
-      
       const politician = {
-        name, party, district, province,
-        image: imageUrl ? imageUrl.replace('https://api.openparliament.ca', '') : null
+        name: card.dataset.name,
+        party: card.dataset.party,
+        district: card.dataset.district,
+        province: card.dataset.province,
+        image: card.dataset.image ? card.dataset.image.replace('https://api.openparliament.ca', '') : null
       };
-      
       showPoliticianModalWithData(politician);
     });
   });
 }
 
-// Clear results
+// ─── Clear Results ────────────────────────────────────────────────────────────
 function clearResults() {
   const resultsList = document.getElementById('results');
   const panelEmpty = document.getElementById('panel-empty');
-  const clearBtn = document.getElementById('clear-btn');
-  const showAllBtn = document.getElementById('show-all-btn');
+  const clearBtn = document.getElementById('clear-results-btn');
   const statusMsg = document.getElementById('status');
   
   if (resultsList) resultsList.innerHTML = '';
   if (panelEmpty) panelEmpty.style.display = 'block';
   if (clearBtn) clearBtn.style.display = 'none';
-  if (showAllBtn) showAllBtn.style.display = 'none';
   if (statusMsg) statusMsg.style.display = 'none';
   
-  // Clear search input
   if (searchInput) searchInput.value = '';
   currentQuery = '';
   currentProvince = '';
   if (provinceFilter) provinceFilter.value = '';
 }
+
+// ─── Clear button handler ─────────────────────────────────────────────────────
+const clearBtn = document.getElementById('clear-results-btn');
+if (clearBtn) {
+  clearBtn.addEventListener('click', () => {
+    clearResults();
+    if (map) map.setView([56.1304, -106.3468], 4);
+  });
+}
+
+// ─── Main fetch function ──────────────────────────────────────────────────────
+async function fetchPoliticians(query = "", province = "", offset = 0) {
+  const statusMsg = document.getElementById('status');
+  if (!statusMsg) return;
   
-  // Add click handlers to cards
-  document.querySelectorAll('.card').forEach(card => {
-    card.addEventListener('click', () => {
-      const name = card.dataset.name;
-      const party = card.dataset.party;
-      const district = card.dataset.district;
-      const province = card.dataset.province;
-      const imageUrl = card.dataset.image;
-      
-      // Create politician object
-      const politician = {
-        name, party, district, province,
-        image: imageUrl ? imageUrl.replace('https://api.openparliament.ca', '') : null
-      };
-      
-      showPoliticianModalWithData(politician);
+  statusMsg.innerHTML = '<div class="loading-spinner"><i class="fas fa-spinner fa-spin"></i> Loading...</div>';
+  
+  const params = new URLSearchParams({ limit: LIMIT, offset });
+  if (query) params.set("name", query);
+  if (province) params.set("province", province);
+  
+  try {
+    const res = await fetch(`/api/politicians?${params}`);
+    if (!res.ok) throw new Error(`Server error: ${res.status}`);
+    
+    const data = await res.json();
+    const politicians = data.politicians;
+    totalCount = data.count;
+    currentOffset = data.offset;
+    
+    if (!politicians.length) {
+      statusMsg.innerHTML = '<p class="empty">No politicians found. Try adjusting your search.</p>';
+      showResultsInPanel([], true);
+      if (markersLayer) markersLayer.clearLayers();
+      return;
+    }
+    
+    const from = offset + 1;
+    const to = Math.min(offset + LIMIT, totalCount);
+    statusMsg.innerHTML = `Found ${totalCount} result${totalCount !== 1 ? "s" : ""} — showing ${from}–${to}`;
+    
+    showResultsInPanel(politicians, true);
+    updateMapMarkers(politicians);
+    renderPagination();
+    
+  } catch (err) {
+    console.error(err);
+    statusMsg.innerHTML = `<p class="error">⚠️ ${err.message}</p>`;
+  }
+}
+
+// ─── Update map markers ───────────────────────────────────────────────────────
+function updateMapMarkers(politicians) {
+  if (!markersLayer || !map) return;
+  
+  markersLayer.clearLayers();
+  const markers = [];
+  const bounds = [];
+  
+  politicians.forEach(politician => {
+    let coords = window.getRidingCoordinates 
+      ? window.getRidingCoordinates(politician.district, politician.province)
+      : (window.ridingCoords && window.ridingCoords[politician.district]);
+    
+    if (!coords) return;
+    
+    let markerColor = "#c0392b";
+    if (politician.party) {
+      if (politician.party.includes("Liberal")) markerColor = "#d1001f";
+      else if (politician.party.includes("Conservative")) markerColor = "#1a4782";
+      else if (politician.party.includes("NDP")) markerColor = "#f48d2b";
+      else if (politician.party.includes("Green")) markerColor = "#3d9b35";
+      else if (politician.party.includes("Bloc")) markerColor = "#00b5e2";
+    }
+    
+    const coloredIcon = L.divIcon({
+      className: 'colored-marker',
+      html: `<div style="background-color: ${markerColor}; width: 24px; height: 24px; border-radius: 50%; border: 2px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.3); transition: transform 0.2s; cursor: pointer;"></div>`,
+      iconSize: [24, 24],
+      popupAnchor: [0, -12]
+    });
+    
+    const popupContent = `
+      <div class="map-popup" onclick="window.showPoliticianModal('${escapeHtml(politician.name)}', '${escapeHtml(politician.party)}', '${escapeHtml(politician.district)}', '${escapeHtml(politician.province)}')">
+        <strong>${escapeHtml(politician.name)}</strong>
+        <div class="popup-party" style="color: ${markerColor}; font-weight: bold;">${escapeHtml(politician.party)}</div>
+        <div class="popup-district">${escapeHtml(politician.district)}</div>
+      </div>
+    `;
+    
+    const marker = L.marker([coords.lat, coords.lng], { icon: coloredIcon }).bindPopup(popupContent);
+    markers.push(marker);
+    bounds.push([coords.lat, coords.lng]);
+  });
+  
+  markersLayer.addLayers(markers);
+  if (bounds.length > 0 && map) map.fitBounds(bounds, { padding: [40, 40] });
+  
+  console.log(`Map updated: ${markers.length} markers added`);
+}
+
+// ─── Quick Filters ────────────────────────────────────────────────────────────
+function initQuickFilters() {
+  const quickFilters = document.querySelectorAll('.quick-filter');
+  quickFilters.forEach(btn => {
+    btn.addEventListener('click', () => {
+      const province = btn.dataset.province;
+      quickFilters.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      if (provinceFilter) {
+        provinceFilter.value = province;
+        provinceFilter.dispatchEvent(new Event('change'));
+      }
     });
   });
 }
-// ─── Show politician modal (only when clicked) ─────────────────────────────────
-window.showPoliticianModal = (name, party, district, province) => {
-  const politician = currentPoliticians.find(p => p.name === name);
-  const imageUrl = politician?.image ? `https://api.openparliament.ca${politician.image}` : null;
-  const slug = politician?.slug; // <-- THIS IS WHERE const slug GOES
 
-  console.log('Politician:', name);
-  console.log('Image URL:', imageUrl);
-  console.log('Slug:', slug);
-
-  const modalName = document.getElementById("modal-name");
-  const modalParty = document.getElementById("modal-party");
-  const modalDistrict = document.getElementById("modal-district");
-  const modalProvince = document.getElementById("modal-province");
-  const modalQuotes = document.getElementById("modal-quotes-text");
-  const learnMoreLink = document.getElementById("modal-learn-more");
-  
-  if (modalName) modalName.textContent = name;
-  if (modalParty) modalParty.textContent = party;
-  if (modalDistrict) modalDistrict.textContent = district;
-  if (modalProvince) modalProvince.textContent = province;
-  if (modalQuotes) modalQuotes.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Loading statements...';
-  
-  if (modal) modal.style.display = 'flex';
-
-   if (learnMoreLink) {
-    if (slug) {
-      learnMoreLink.href = `https://openparliament.ca/politicians/${slug}/`;
-    } else {
-      // Fallback: generate slug from name
-      const fallbackSlug = name.toLowerCase().replace(/\s+/g, '-');
-      learnMoreLink.href = `https://openparliament.ca/politicians/${fallbackSlug}/`;
-    }
-    learnMoreLink.style.display = 'inline-flex';
-  }
-  
-  // Add photo to modal header
-  // Add photo to modal header
-const modalHeader = document.querySelector('.modal-header');
-if (modalHeader) {
-  let existingPhoto = modalHeader.querySelector('.modal-photo');
-  if (!existingPhoto) {
-    const photoDiv = document.createElement('div');
-    photoDiv.className = 'modal-photo';
-    if (imageUrl) {
-      photoDiv.innerHTML = `<img src="${imageUrl}" alt="${escapeHtml(name)}" style="width: 60px; height: 60px; border-radius: 50%; object-fit: cover;">`;
-    } else {
-      photoDiv.innerHTML = `<div class="modal-initials">${getInitials(name)}</div>`;
-    }
-    modalHeader.insertBefore(photoDiv, modalHeader.firstChild);
-  } else {
-    if (imageUrl) {
-      existingPhoto.innerHTML = `<img src="${imageUrl}" alt="${escapeHtml(name)}" style="width: 60px; height: 60px; border-radius: 50%; object-fit: cover;">`;
-    } else {
-      existingPhoto.innerHTML = `<div class="modal-initials">${getInitials(name)}</div>`;
-    }
-  }
-}
-  if (modal) modal.style.display = 'flex';
-  
-  // Fetch quotes for this politician
-  fetchQuotesForPolitician(name);
-};
-  
-
+// ─── Show Politician Modal ────────────────────────────────────────────────────
 function showPoliticianModalWithData(politician) {
   const name = politician.name;
   const party = politician.party;
@@ -517,10 +282,6 @@ function showPoliticianModalWithData(politician) {
   const province = politician.province;
   const imageUrl = politician.image ? `https://api.openparliament.ca${politician.image}` : null;
   const slug = politician.slug;
-  
-  console.log('Showing modal for:', name);
-  console.log('Image URL:', imageUrl);
-  console.log('Slug:', slug);
   
   const modalName = document.getElementById("modal-name");
   const modalParty = document.getElementById("modal-party");
@@ -535,18 +296,15 @@ function showPoliticianModalWithData(politician) {
   if (modalProvince) modalProvince.textContent = province;
   if (modalQuotes) modalQuotes.innerHTML = '<div class="loading-spinner"><i class="fas fa-spinner fa-spin"></i> Loading speeches...</div>';
   
-  // Set the learn more link
   if (learnMoreLink) {
     if (slug) {
       learnMoreLink.href = `https://openparliament.ca/politicians/${slug}/`;
     } else {
-      const fallbackSlug = name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
-      learnMoreLink.href = `https://openparliament.ca/politicians/${fallbackSlug}/`;
+      learnMoreLink.href = `https://openparliament.ca/politicians/${name.toLowerCase().replace(/\s+/g, '-')}/`;
     }
     learnMoreLink.style.display = 'inline-flex';
   }
   
-  // Add photo to the modal body
   const modalBody = document.querySelector('.modal-body');
   if (modalBody) {
     let existingPhoto = document.getElementById('modal-politician-photo');
@@ -562,30 +320,23 @@ function showPoliticianModalWithData(politician) {
       modalBody.insertBefore(photoDiv, modalBody.firstChild);
     } else if (imageUrl) {
       existingPhoto.innerHTML = `<img src="${imageUrl}" alt="${escapeHtml(name)}" style="width: 100px; height: 100px; border-radius: 50%; object-fit: cover; border: 3px solid #c0392b;">`;
-    } else {
-      existingPhoto.innerHTML = `<div class="modal-initials" style="width: 100px; height: 100px; border-radius: 50%; background: #c0392b; color: white; display: flex; align-items: center; justify-content: center; margin: 0 auto; font-size: 2rem; font-weight: bold;">${getInitials(name)}</div>`;
     }
   }
   
   if (modal) modal.style.display = 'flex';
-  
-  // Fetch quotes for this politician
   fetchQuotesForPolitician(name);
 }
 
-// Keep the original for backward compatibility
 window.showPoliticianModal = (name, party, district, province) => {
-  // Try to find the full politician object
   const politician = allReps.find(p => p.name === name);
   if (politician) {
     showPoliticianModalWithData(politician);
   } else {
-    // Fallback without image
-    console.log('Politician not found in allReps, using fallback');
-    // ... fallback code
+    showPoliticianModalWithData({ name, party, district, province, image: null, slug: null });
   }
 };
 
+// ─── Fetch Quotes ─────────────────────────────────────────────────────────────
 async function fetchQuotesForPolitician(name) {
   const modalQuotes = document.getElementById("modal-quotes-text");
   if (!modalQuotes) return;
@@ -594,10 +345,7 @@ async function fetchQuotesForPolitician(name) {
   
   try {
     const response = await fetch(`/api/quotes?politician=${encodeURIComponent(name)}&t=${Date.now()}`);
-    
-    if (!response.ok) {
-      throw new Error(`HTTP ${response.status}`);
-    }
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
     
     const data = await response.json();
     
@@ -605,9 +353,7 @@ async function fetchQuotesForPolitician(name) {
       const quotesHtml = data.objects.map(statement => {
         let text = statement.text?.en || "";
         if (!text || text === "No text available") return "";
-        
         const date = statement.date || "";
-        
         return `
           <blockquote style="margin: 16px 0; padding: 16px; background: #f9f9f9; border-left: 4px solid #c0392b; border-radius: 8px;">
             <i class="fas fa-quote-left" style="color: #c0392b; margin-right: 8px; opacity: 0.5; float: left;"></i>
@@ -618,221 +364,25 @@ async function fetchQuotesForPolitician(name) {
           </blockquote>
         `;
       }).join('');
-      
-      if (quotesHtml) {
-        modalQuotes.innerHTML = quotesHtml;
-      } else {
-        modalQuotes.innerHTML = `
-          <p style="text-align: center; color: #666;">
-            <i class="fas fa-comment"></i> No recent speeches found for ${escapeHtml(name)}.
-          </p>
-          <p style="text-align: center; font-size: 12px; color: #999; margin-top: 8px;">
-            Speeches from the House of Commons will appear here when available.
-          </p>
-        `;
-      }
+      modalQuotes.innerHTML = quotesHtml || '<p>No recent speeches found.</p>';
     } else {
-      modalQuotes.innerHTML = `
-        <p style="text-align: center; color: #666;">
-          <i class="fas fa-comment"></i> No recent speeches found for ${escapeHtml(name)}.
-        </p>
-        <p style="text-align: center; font-size: 12px; color: #999; margin-top: 8px;">
-          Check back later for updates from your representative.
-        </p>
-      `;
+      modalQuotes.innerHTML = '<p>No recent speeches found for this representative.</p>';
     }
   } catch (error) {
     console.error("Error fetching speeches:", error);
-    modalQuotes.innerHTML = `
-      <p style="text-align: center; color: #c0392b;">
-        <i class="fas fa-exclamation-circle"></i> Unable to load speeches at this time.
-      </p>
-      <div style="text-align: center; margin-top: 12px;">
-        <button onclick="fetchQuotesForPolitician('${escapeHtml(name)}')" style="
-          background: #c0392b;
-          color: white;
-          border: none;
-          padding: 8px 16px;
-          border-radius: 6px;
-          cursor: pointer;
-          font-size: 12px;
-        ">
-          <i class="fas fa-sync-alt"></i> Retry
-        </button>
-      </div>
-    `;
+    modalQuotes.innerHTML = '<p style="color: #c0392b;">Unable to load speeches at this time.</p>';
   }
 }
 
-function getDefaultQuotes(name) {
-  return [
-    {
-      text: { en: `"I am dedicated to serving my constituents and making our community a better place." - ${name}` },
-      date: new Date().toISOString()
-    },
-    {
-      text: { en: `"Working together, we can build a stronger, more prosperous future for everyone." - ${name}` },
-      date: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString()
-    },
-    {
-      text: { en: `"Thank you for your continued trust and support. I will always put our community first." - ${name}` },
-      date: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString()
-    }
-  ];
-}
-
-// ─── Close modal functions ────────────────────────────────────────────────────
-function closeModalFunction() {
-  if (modal) modal.style.display = 'none';
-}
-
-if (closeModal) {
-  closeModal.addEventListener("click", closeModalFunction);
-}
-
-// Close modal on outside click
-if (modal) {
-  modal.addEventListener("click", (e) => {
-    if (e.target === modal) {
-      closeModalFunction();
-    }
-  });
-}
-
-// Close modal on ESC
-document.addEventListener("keydown", (e) => {
-  if (e.key === "Escape" && modal && modal.style.display === 'flex') {
-    closeModalFunction();
-  }
-});
-
-// ─── Location detection ───────────────────────────────────────────────────────
-if (useLocationBtn) {
-  useLocationBtn.addEventListener("click", () => {
-    if ("geolocation" in navigator) {
-      if (statusDiv) statusDiv.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Getting your location...';
-      navigator.geolocation.getCurrentPosition(
-        async (position) => {
-          const { latitude, longitude } = position.coords;
-          if (map) map.setView([latitude, longitude], 10);
-          await findNearestDistrict(latitude, longitude);
-        },
-        (error) => {
-          console.error("Geolocation error:", error);
-          if (statusDiv) statusDiv.innerHTML = '<p class="error">Unable to get your location. Please search manually.</p>';
-          setTimeout(() => { if (statusDiv) statusDiv.innerHTML = ""; }, 3000);
-        }
-      );
-    } else {
-      if (statusDiv) statusDiv.innerHTML = '<p class="error">Geolocation is not supported by your browser.</p>';
-    }
-  });
-}
-
-async function findNearestDistrict(lat, lng) {
-  if (!window.ridingCoords) {
-    if (statusDiv) statusDiv.innerHTML = '<p class="error">District coordinates not loaded yet.</p>';
-    return;
-  }
-  
-  if (statusDiv) statusDiv.innerHTML = '<i class="fas fa-search"></i> Finding your electoral district...';
-  
-  let nearestDistrict = null;
-  let minDistance = Infinity;
-  
-  for (const [district, coords] of Object.entries(window.ridingCoords)) {
-    const distance = Math.sqrt(
-      Math.pow(lat - coords.lat, 2) + 
-      Math.pow(lng - coords.lng, 2)
-    );
-    
-    if (distance < minDistance) {
-      minDistance = distance;
-      nearestDistrict = district;
-    }
-  }
-  
-  if (nearestDistrict) {
-    if (statusDiv) statusDiv.innerHTML = `<i class="fas fa-check-circle"></i> Found district: ${nearestDistrict}`;
-    if (searchInput) searchInput.value = nearestDistrict;
-    currentQuery = nearestDistrict;
-    currentOffset = 0;
-    fetchPoliticians(currentQuery, currentProvince, 0);
-    setTimeout(() => { if (statusDiv) statusDiv.innerHTML = ""; }, 3000);
-  } else {
-    if (statusDiv) statusDiv.innerHTML = '<p class="error">Could not find your district. Please search manually.</p>';
-  }
-}
-
-// ─── Autocomplete functionality ───────────────────────────────────────────────
-function fetchSuggestions(query) {
-  if (!query || query.length < 2) {
-    closeDropdown();
-    return;
-  }
-  
-  const q = query.toLowerCase();
-  const filtered = allReps
-    .filter(p => p.name.toLowerCase().includes(q) || p.district.toLowerCase().includes(q))
-    .slice(0, 8);
-  
-  showDropdown(filtered, query);
-}
-
-function showDropdown(politicians, query) {
-  if (!dropdown) return;
-  
-  if (!politicians.length) {
-    closeDropdown();
-    return;
-  }
-  
-  activeIndex = -1;
-  dropdown.innerHTML = politicians.map((p, i) => `
-    <li data-index="${i}" data-name="${escapeHtml(p.name)}" data-district="${escapeHtml(p.district)}">
-      <span class="suggestion-name">${highlight(p.name, query)}</span>
-      <span class="suggestion-district">${escapeHtml(p.district)}${p.province ? `, ${p.province}` : ""}</span>
-    </li>
-  `).join("");
-  
-  dropdown.hidden = false;
-  
-  dropdown.querySelectorAll("li").forEach(li => {
-    li.addEventListener("mousedown", e => {
-      e.preventDefault();
-      selectSuggestion(li.dataset.name);
-    });
-  });
-}
-
-function closeDropdown() {
-  if (dropdown) {
-    dropdown.hidden = true;
-    dropdown.innerHTML = "";
-  }
-  activeIndex = -1;
-}
-
-function selectSuggestion(name) {
-  if (searchInput) searchInput.value = name;
-  currentQuery = name;
-  currentOffset = 0;
-  closeDropdown();
-  fetchPoliticians(currentQuery, currentProvince, 0);
-}
-
-function highlight(text, query) {
-  const esc = query.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-  return escapeHtml(text).replace(new RegExp(`(${esc})`, "gi"), "<mark>$1</mark>");
-}
-
+// ─── Helper Functions ─────────────────────────────────────────────────────────
 function escapeHtml(str) {
   if (!str) return "";
-  return str
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;");
+  return str.replace(/[&<>]/g, function(m) {
+    if (m === '&') return '&amp;';
+    if (m === '<') return '&lt;';
+    if (m === '>') return '&gt;';
+    return m;
+  });
 }
 
 function getInitials(name) {
@@ -840,92 +390,8 @@ function getInitials(name) {
   return name.trim().split(/\s+/).map(p => p[0]).join("").slice(0, 2).toUpperCase();
 }
 
-// ─── Keyboard navigation ──────────────────────────────────────────────────────
-if (searchInput) {
-  searchInput.addEventListener("keydown", e => {
-    if (!dropdown) return;
-    
-    const items = dropdown.querySelectorAll("li");
-    if (dropdown.hidden || !items.length) {
-      if (e.key === "Enter") {
-        currentQuery = searchInput.value.trim();
-        currentOffset = 0;
-        fetchPoliticians(currentQuery, currentProvince, 0);
-      }
-      return;
-    }
-    
-    if (e.key === "ArrowDown") {
-      e.preventDefault();
-      activeIndex = Math.min(activeIndex + 1, items.length - 1);
-    } else if (e.key === "ArrowUp") {
-      e.preventDefault();
-      activeIndex = Math.max(activeIndex - 1, -1);
-    } else if (e.key === "Enter") {
-      e.preventDefault();
-      if (activeIndex >= 0) {
-        selectSuggestion(items[activeIndex].dataset.name);
-      } else {
-        currentQuery = searchInput.value.trim();
-        currentOffset = 0;
-        closeDropdown();
-        fetchPoliticians(currentQuery, currentProvince, 0);
-      }
-      return;
-    } else if (e.key === "Escape") {
-      closeDropdown();
-      return;
-    }
-    
-    items.forEach((li, i) => li.classList.toggle("active", i === activeIndex));
-    if (activeIndex >= 0) items[activeIndex].scrollIntoView({ block: "nearest" });
-  });
-  
-  searchInput.addEventListener("input", () => {
-    clearTimeout(debounceTimer);
-    debounceTimer = setTimeout(() => fetchSuggestions(searchInput.value.trim()), 200);
-  });
-  
-  searchInput.addEventListener("blur", () => setTimeout(closeDropdown, 150));
-}
-
-// Province filter with better visibility
-if (provinceFilter) {
-  provinceFilter.addEventListener("change", async () => {
-    const selectedProvince = provinceFilter.value;
-    const provinceName = selectedProvince 
-      ? provinceFilter.options[provinceFilter.selectedIndex]?.text 
-      : "all of Canada";
-    
-    console.log(`Province filter changed to: ${selectedProvince || "ALL"}`);
-    
-    // Reset search and pagination
-    currentQuery = "";
-    if (searchInput) searchInput.value = "";
-    currentOffset = 0;
-    currentProvince = selectedProvince;
-    closeDropdown();
-    
-    // Show loading with province name
-    statusDiv.innerHTML = `<div class="loading-spinner"><i class="fas fa-spinner fa-spin"></i> Loading ${provinceName} representatives...</div>`;
-    
-    // Fetch politicians for selected province
-    await fetchPoliticians("", selectedProvince, 0);
-    
-    // After fetching, show a message about what's being displayed
-    if (selectedProvince && totalCount > 0) {
-      statusDiv.innerHTML = `<i class="fas fa-check-circle"></i> Showing ${totalCount} representative${totalCount !== 1 ? 's' : ''} from ${provinceName}`;
-      setTimeout(() => {
-        if (statusDiv.innerHTML.includes(provinceName)) {
-          statusDiv.innerHTML = "";
-        }
-      }, 3000);
-    }
-  });
-}
-
-// ─── Pagination ───────────────────────────────────────────────────────────────
 function renderPagination() {
+  const paginationDiv = document.getElementById('pagination');
   if (!paginationDiv) return;
   
   const hasPrev = currentOffset > 0;
@@ -944,105 +410,171 @@ function renderPagination() {
     <button class="page-btn" id="next-btn" ${hasNext ? "" : "disabled"}>Next →</button>
   `;
   
-  const prevBtn = document.getElementById("prev-btn");
-  const nextBtn = document.getElementById("next-btn");
+  document.getElementById("prev-btn")?.addEventListener("click", () => 
+    fetchPoliticians(currentQuery, currentProvince, currentOffset - LIMIT));
+  document.getElementById("next-btn")?.addEventListener("click", () => 
+    fetchPoliticians(currentQuery, currentProvince, currentOffset + LIMIT));
+}
+
+// ─── Province Filter ──────────────────────────────────────────────────────────
+if (provinceFilter) {
+  provinceFilter.addEventListener("change", async () => {
+    currentProvince = provinceFilter.value;
+    currentQuery = "";
+    if (searchInput) searchInput.value = "";
+    currentOffset = 0;
+    closeDropdown();
+    await fetchPoliticians("", currentProvince, 0);
+  });
+}
+
+// ─── Autocomplete ─────────────────────────────────────────────────────────────
+function fetchSuggestions(query) {
+  if (!query || query.length < 2) { closeDropdown(); return; }
+  const q = query.toLowerCase();
+  const filtered = allReps.filter(p => p.name.toLowerCase().includes(q) || p.district.toLowerCase().includes(q)).slice(0, 8);
+  showDropdown(filtered, query);
+}
+
+function showDropdown(politicians, query) {
+  if (!dropdown) return;
+  if (!politicians.length) { closeDropdown(); return; }
   
-  if (prevBtn) {
-    prevBtn.addEventListener("click", () => 
-      fetchPoliticians(currentQuery, currentProvince, currentOffset - LIMIT)
-    );
+  activeIndex = -1;
+  dropdown.innerHTML = politicians.map((p, i) => `
+    <li data-index="${i}" data-name="${escapeHtml(p.name)}">
+      <span class="suggestion-name">${highlight(p.name, query)}</span>
+      <span class="suggestion-district">${escapeHtml(p.district)}${p.province ? `, ${p.province}` : ""}</span>
+    </li>
+  `).join("");
+  dropdown.hidden = false;
+  
+  dropdown.querySelectorAll("li").forEach(li => {
+    li.addEventListener("mousedown", e => { e.preventDefault(); selectSuggestion(li.dataset.name); });
+  });
+}
+
+function closeDropdown() {
+  if (dropdown) { dropdown.hidden = true; dropdown.innerHTML = ""; }
+  activeIndex = -1;
+}
+
+function selectSuggestion(name) {
+  if (searchInput) searchInput.value = name;
+  currentQuery = name;
+  currentOffset = 0;
+  closeDropdown();
+  fetchPoliticians(currentQuery, currentProvince, 0);
+}
+
+function highlight(text, query) {
+  const esc = query.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  return escapeHtml(text).replace(new RegExp(`(${esc})`, "gi"), "<mark>$1</mark>");
+}
+
+// ─── Keyboard Navigation ──────────────────────────────────────────────────────
+if (searchInput) {
+  searchInput.addEventListener("keydown", e => {
+    const items = dropdown?.querySelectorAll("li");
+    if (!dropdown?.hidden && items?.length) {
+      if (e.key === "ArrowDown") { e.preventDefault(); activeIndex = Math.min(activeIndex + 1, items.length - 1); }
+      else if (e.key === "ArrowUp") { e.preventDefault(); activeIndex = Math.max(activeIndex - 1, -1); }
+      else if (e.key === "Enter") {
+        e.preventDefault();
+        if (activeIndex >= 0) selectSuggestion(items[activeIndex].dataset.name);
+        else { currentQuery = searchInput.value.trim(); currentOffset = 0; closeDropdown(); fetchPoliticians(currentQuery, currentProvince, 0); }
+        return;
+      } else if (e.key === "Escape") { closeDropdown(); return; }
+      items.forEach((li, i) => li.classList.toggle("active", i === activeIndex));
+      if (activeIndex >= 0) items[activeIndex].scrollIntoView({ block: "nearest" });
+    } else if (e.key === "Enter") {
+      currentQuery = searchInput.value.trim();
+      currentOffset = 0;
+      fetchPoliticians(currentQuery, currentProvince, 0);
+    }
+  });
+  
+  searchInput.addEventListener("input", () => {
+    clearTimeout(debounceTimer);
+    debounceTimer = setTimeout(() => fetchSuggestions(searchInput.value.trim()), 200);
+  });
+  
+  searchInput.addEventListener("blur", () => setTimeout(closeDropdown, 150));
+}
+
+// ─── Location Detection ───────────────────────────────────────────────────────
+if (useLocationBtn) {
+  useLocationBtn.addEventListener("click", () => {
+    if ("geolocation" in navigator) {
+      const statusMsg = document.getElementById('status');
+      if (statusMsg) statusMsg.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Getting your location...';
+      navigator.geolocation.getCurrentPosition(
+        async (position) => {
+          const { latitude, longitude } = position.coords;
+          if (map) map.setView([latitude, longitude], 10);
+          await findNearestDistrict(latitude, longitude);
+        },
+        (error) => {
+          console.error("Geolocation error:", error);
+          const statusMsg = document.getElementById('status');
+          if (statusMsg) statusMsg.innerHTML = '<p class="error">Unable to get your location. Please search manually.</p>';
+          setTimeout(() => { if (statusMsg) statusMsg.innerHTML = ""; }, 3000);
+        }
+      );
+    }
+  });
+}
+
+async function findNearestDistrict(lat, lng) {
+  if (!window.ridingCoords) return;
+  const statusMsg = document.getElementById('status');
+  if (statusMsg) statusMsg.innerHTML = '<i class="fas fa-search"></i> Finding your electoral district...';
+  
+  let nearestDistrict = null;
+  let minDistance = Infinity;
+  for (const [district, coords] of Object.entries(window.ridingCoords)) {
+    const distance = Math.sqrt(Math.pow(lat - coords.lat, 2) + Math.pow(lng - coords.lng, 2));
+    if (distance < minDistance) { minDistance = distance; nearestDistrict = district; }
   }
-  if (nextBtn) {
-    nextBtn.addEventListener("click", () => 
-      fetchPoliticians(currentQuery, currentProvince, currentOffset + LIMIT)
-    );
+  
+  if (nearestDistrict && searchInput) {
+    if (statusMsg) statusMsg.innerHTML = `<i class="fas fa-check-circle"></i> Found district: ${nearestDistrict}`;
+    searchInput.value = nearestDistrict;
+    currentQuery = nearestDistrict;
+    currentOffset = 0;
+    fetchPoliticians(currentQuery, currentProvince, 0);
+    setTimeout(() => { if (statusMsg) statusMsg.innerHTML = ""; }, 3000);
   }
 }
 
-// ─── Load initial data and setup ──────────────────────────────────────────────
+// ─── Close Modal ──────────────────────────────────────────────────────────────
+function closeModalFunction() { if (modal) modal.style.display = 'none'; }
+if (closeModal) closeModal.addEventListener("click", closeModalFunction);
+if (modal) modal.addEventListener("click", (e) => { if (e.target === modal) closeModalFunction(); });
+document.addEventListener("keydown", (e) => { if (e.key === "Escape" && modal?.style.display === 'flex') closeModalFunction(); });
+
+// ─── Init ─────────────────────────────────────────────────────────────────────
 async function init() {
-  // Show loading state for map
   const mapElement = document.getElementById('map');
-  if (mapElement) {
-    mapElement.style.opacity = '0.5';
-  }
+  if (mapElement) mapElement.style.opacity = '0.5';
   
-  // Initialize scroll animation
   initScrollAnimation();
-  
-  // Initialize map
   map = initMap();
+  if (modal) modal.style.display = 'none';
   
-  // Make sure modal is hidden initially
-  if (modal) {
-    modal.style.display = 'none';
-  }
-  
-  // Load all politicians for autocomplete
   try {
     const res = await fetch("/api/politicians?limit=400");
     const data = await res.json();
     allReps = data.politicians || [];
-  } catch (error) {
-    console.error("Failed to load initial data:", error);
-  }
+  } catch (error) { console.error("Failed to load initial data:", error); }
   
-  // Initial fetch
   await fetchPoliticians();
-  
-  // Map is now loaded
-  if (mapElement) {
-    mapElement.style.opacity = '1';
-  }
+  if (mapElement) mapElement.style.opacity = '1';
+  initQuickFilters();
 }
 
-// Wait for DOM to be fully loaded before initializing
 if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', init);
 } else {
   init();
-}
-
-function updateProvinceInfo(province, count) {
-  const infoPanel = document.getElementById('province-info');
-  if (!infoPanel) return;
-  
-  if (province && count > 0) {
-    const provinceName = provinceFilter?.options[provinceFilter.selectedIndex]?.text || province;
-    infoPanel.querySelector('.province-name').textContent = provinceName;
-    infoPanel.querySelector('.province-count').textContent = `${count} representative${count !== 1 ? 's' : ''}`;
-    infoPanel.style.display = 'block';
-    
-    // Auto-hide after 5 seconds
-    setTimeout(() => {
-      if (infoPanel.style.display === 'block') {
-        infoPanel.style.opacity = '0.8';
-        setTimeout(() => {
-          if (infoPanel.style.display === 'block') {
-            infoPanel.style.display = 'none';
-            infoPanel.style.opacity = '1';
-          }
-        }, 3000);
-      }
-    }, 5000);
-  } else {
-    infoPanel.style.display = 'none';
-  }
-}
-
-// Reset view button
-const resetViewBtn = document.getElementById('reset-view');
-if (resetViewBtn) {
-  resetViewBtn.addEventListener('click', () => {
-    if (provinceFilter) provinceFilter.value = '';
-    currentProvince = '';
-    currentQuery = '';
-    if (searchInput) searchInput.value = '';
-    currentOffset = 0;
-    fetchPoliticians('', '', 0);
-    
-    // Hide province info
-    const infoPanel = document.getElementById('province-info');
-    if (infoPanel) infoPanel.style.display = 'none';
-  });
 }

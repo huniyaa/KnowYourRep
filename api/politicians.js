@@ -1,9 +1,7 @@
 export default async function handler(req, res) {
   try {
-    // get query parameters
     const { name = "", province = "" } = req.query;
     
-    // fetch all MPs (large enough limit for provincial filtering)
     const params = new URLSearchParams({ format: "json", limit: 400 });
     if (name.trim()) params.set("name", name.trim());
     
@@ -12,24 +10,19 @@ export default async function handler(req, res) {
     
     const data = await response.json();
     
-    // map API objects to cleaned format
     let cleaned = data.objects.map((rep) => ({
       name: rep.name ?? "Unknown",
       party: rep.current_party?.short_name?.en ?? "Unknown",
       district: rep.current_riding?.name?.en ?? "Unknown",
       province: rep.current_riding?.province ?? "",
-      image: rep.image ?? "",
-      image: rep.image ?? null,  // Make sure this is included
-      slug: rep.url?.split('/').filter(Boolean).pop() ?? null,  // Add this line
+      image: rep.image ?? null,
       slug: rep.url?.split('/').filter(Boolean).pop() ?? null,
     }));
     
-    // filter by province if selected
     if (province.trim()) {
       cleaned = cleaned.filter(rep => rep.province === province);
     }
     
-    // send response
     res.status(200).json({
       politicians: cleaned,
       count: cleaned.length,
