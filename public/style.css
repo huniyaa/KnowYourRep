@@ -425,4 +425,6 @@ blockquote {
   width: 100%;
   height: 2px;
   background: #c0392b;
+  /* Remove the animation that was causing the growing effect */
+  transform: scaleX(1);
 }
