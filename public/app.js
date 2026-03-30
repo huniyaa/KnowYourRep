@@ -22,30 +22,22 @@ let activeIndex = -1;
 let allReps = [];
 let map;
 
+
 // ─── Scroll Animation for Hero Section ───────────────────────────────────────
 function initScrollAnimation() {
   const hero = document.getElementById('hero');
-  const appContent = document.getElementById('app-content');
   const scrollIndicator = document.querySelector('.scroll-indicator');
   
-  function revealContent() {
-    if (hero && appContent) {
+  function hideHero() {
+    if (hero && !hero.classList.contains('hide-hero')) {
       hero.classList.add('hide-hero');
-      // No need to hide/show app-content, it's always visible below hero
     }
   }
   
-  // Mouse wheel scroll
-  window.addEventListener('wheel', (e) => {
-    if (e.deltaY > 0) { // Scrolling down
-      revealContent();
-    }
-  });
-  
-  // Regular scroll
+  // Hide hero when scrolling down
   window.addEventListener('scroll', () => {
-    if (window.scrollY > 50) {
-      revealContent();
+    if (window.scrollY > 10) {
+      hideHero();
     }
   });
   
@@ -53,23 +45,18 @@ function initScrollAnimation() {
   if (scrollIndicator) {
     scrollIndicator.addEventListener('click', (e) => {
       e.preventDefault();
-      revealContent();
+      hideHero();
       window.scrollTo({
         top: window.innerHeight,
         behavior: 'smooth'
       });
     });
   }
-  
-  // Check initial scroll position
-  if (window.scrollY > 50) {
-    revealContent();
-  }
 }
 
 async function init() {
   // Initialize scroll animation
-  initScrollAnimation();  // <-- ADD THIS LINE
+  initScrollAnimation();  // <-- MAKE SURE THIS IS HERE
   
   map = initMap();
   if (modal) modal.style.display = 'none';

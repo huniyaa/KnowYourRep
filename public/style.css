@@ -8,6 +8,90 @@ body {
   font-family: 'Libre Baskerville', serif;
   background: #FFFCF4;
   color: #1a202c;
+}
+
+/* ========== HERO SECTION ========== */
+#hero {
+  position: relative;
+  width: 100%;
+  height: 100vh;
+  background: #FFFCF4;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: opacity 0.6s ease;
+}
+
+#hero.hide-hero {
+  opacity: 0;
+  pointer-events: none;
+  height: 0;
+  overflow: hidden;
+}
+
+.hero-content {
+  text-align: center;
+}
+
+.hero-title {
+  font-size: 5rem;
+  font-weight: 700;
+  color: #1a202c;
+}
+
+.underlined {
+  position: relative;
+  display: inline-block;
+}
+
+.underlined::after {
+  content: '';
+  position: absolute;
+  bottom: -8px;
+  left: 0;
+  width: 100%;
+  height: 4px;
+  background: #c0392b;
+  transform: scaleX(0);
+  transform-origin: left;
+  animation: underlineGrow 0.6s ease-out forwards 0.3s;
+}
+
+@keyframes underlineGrow {
+  to {
+    transform: scaleX(1);
+  }
+}
+
+.scroll-indicator {
+  margin-top: 60px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+  animation: bounce 2s infinite;
+}
+
+.scroll-text {
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  color: #c0392b;
+}
+
+.scroll-arrow {
+  font-size: 1.5rem;
+  color: #c0392b;
+}
+
+@keyframes bounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(10px); }
+}
+
+/* ========== MAIN APP CONTENT ========== */
+#app-content {
   padding: 20px;
 }
 
@@ -296,105 +380,4 @@ blockquote {
   color: #666;
   margin: 16px 0;
   font-style: italic;
-}
-/* ========== HERO SECTION ========== */
-#hero {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100vh;
-  background: #FFFCF4;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-  transition: opacity 0.6s ease, visibility 0.6s ease;
-}
-
-#hero.hide-hero {
-  opacity: 0;
-  visibility: hidden;
-}
-
-.hero-content {
-  text-align: center;
-  animation: fadeInUp 1s ease-out;
-}
-
-.hero-title {
-  font-size: 5rem;
-  font-weight: 700;
-  color: #1a202c;
-  letter-spacing: -0.02em;
-}
-
-.underlined {
-  position: relative;
-  display: inline-block;
-}
-
-.underlined::after {
-  content: '';
-  position: absolute;
-  bottom: -8px;
-  left: 0;
-  width: 100%;
-  height: 4px;
-  background: #c0392b;
-  transform: scaleX(0);
-  transform-origin: left;
-  animation: underlineGrow 0.6s ease-out forwards 0.3s;
-}
-
-@keyframes underlineGrow {
-  to {
-    transform: scaleX(1);
-  }
-}
-
-.scroll-indicator {
-  margin-top: 60px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 12px;
-  cursor: pointer;
-  animation: bounce 2s infinite;
-}
-
-.scroll-text {
-  font-size: 0.9rem;
-  text-transform: uppercase;
-  letter-spacing: 2px;
-  color: #c0392b;
-  font-weight: 400;
-}
-
-.scroll-arrow {
-  font-size: 1.5rem;
-  color: #c0392b;
-}
-
-@keyframes bounce {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(10px); }
-}
-
-@keyframes fadeInUp {
-  from {
-    opacity: 0;
-    transform: translateY(30px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-/* ========== MAIN APP CONTENT ========== */
-#app-content {
-  margin-top: 100vh;
-  padding: 20px;
-  transition: all 0.3s ease;
 }
