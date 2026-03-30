@@ -35,22 +35,41 @@ function initScrollAnimation() {
     }
   }
   
-  function handleStickyHeader() {
-    if (stickyHeader) {
-      if (window.scrollY > window.innerHeight - 100) {
-        stickyHeader.classList.add('visible');
-      } else {
-        stickyHeader.classList.remove('visible');
-      }
+  function updateStickyHeader() {
+    if (!stickyHeader) return;
+    
+    // Get the hero's height (it takes full viewport)
+    const heroHeight = window.innerHeight;
+    
+    // Show sticky header when scrolled past the hero
+    if (window.scrollY > heroHeight - 80) {
+      stickyHeader.classList.add('visible');
+    } else {
+      stickyHeader.classList.remove('visible');
     }
+    
+    function updateStickyHeader() {
+  if (!stickyHeader) return;
+  
+  const heroHeight = window.innerHeight;
+  const scrollY = window.scrollY;
+  
+  console.log(`ScrollY: ${scrollY}, HeroHeight: ${heroHeight}, Show: ${scrollY > heroHeight - 80}`);
+  
+  if (scrollY > heroHeight - 80) {
+    stickyHeader.classList.add('visible');
+  } else {
+    stickyHeader.classList.remove('visible');
+  }
+}
   }
   
-  // Hide hero when scrolling down
+  // Handle scroll events
   window.addEventListener('scroll', () => {
     if (window.scrollY > 10) {
       hideHero();
     }
-    handleStickyHeader();
+    updateStickyHeader();
   });
   
   // Click on scroll indicator
@@ -66,7 +85,7 @@ function initScrollAnimation() {
   }
   
   // Initial check
-  handleStickyHeader();
+  updateStickyHeader();
 }
 
 async function init() {

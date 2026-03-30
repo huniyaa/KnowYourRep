@@ -400,10 +400,17 @@ blockquote {
   transform: translateY(0);
 }
 
+.sticky-header-content {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
 .sticky-header-content h2 {
-  font-size: 1.3rem;
+  font-size: 1.2rem;
   color: #1a202c;
   margin: 0;
+  font-weight: 600;
 }
 
 .underlined-small {
