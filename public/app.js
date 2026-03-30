@@ -32,13 +32,28 @@ function initScrollAnimation() {
     if (hero && appContent) {
       hero.classList.add('hide-hero');
       appContent.classList.remove('hidden');
+      // Force a reflow to ensure the map renders correctly
+      setTimeout(() => {
+        if (map) map.invalidateSize();
+      }, 100);
     }
   }
   
-  window.addEventListener('scroll', () => {
-    if (window.scrollY > 50) revealContent();
+  // Mouse wheel scroll
+  window.addEventListener('wheel', (e) => {
+    if (window.scrollY > 10 || e.deltaY > 0) {
+      revealContent();
+    }
   });
   
+  // Regular scroll
+  window.addEventListener('scroll', () => {
+    if (window.scrollY > 50) {
+      revealContent();
+    }
+  });
+  
+  // Click on scroll indicator
   if (scrollIndicator) {
     scrollIndicator.addEventListener('click', (e) => {
       e.preventDefault();
@@ -47,7 +62,10 @@ function initScrollAnimation() {
     });
   }
   
-  if (window.scrollY > 50) revealContent();
+  // Check initial scroll position
+  if (window.scrollY > 50) {
+    revealContent();
+  }
 }
 
 // ─── Initialize map ────────────────────────────────────────────────────────
@@ -223,6 +241,7 @@ function updateMapMarkers(politicians) {
     
     if (!coords) return;
     
+    // Get party color for the pin
     let markerColor = "#c0392b";
     if (politician.party) {
       if (politician.party.includes("Liberal")) markerColor = "#d1001f";
@@ -232,28 +251,44 @@ function updateMapMarkers(politicians) {
       else if (politician.party.includes("Bloc")) markerColor = "#00b5e2";
     }
     
-    const coloredIcon = L.divIcon({
-      className: 'colored-marker',
-      html: `<div style="background-color: ${markerColor}; width: 24px; height: 24px; border-radius: 50%; border: 2px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.3); transition: transform 0.2s; cursor: pointer;"></div>`,
-      iconSize: [24, 24],
-      popupAnchor: [0, -12]
+    // Create custom colored pin using Leaflet's default marker shape
+    const coloredPinIcon = L.divIcon({
+      className: 'custom-pin',
+      html: `<div style="position: relative; width: 25px; height: 41px;">
+        <svg width="25" height="41" viewBox="0 0 25 41" xmlns="http://www.w3.org/2000/svg">
+          <path d="M12.5 0C5.6 0 0 5.6 0 12.5C0 21.9 12.5 41 12.5 41C12.5 41 25 21.9 25 12.5C25 5.6 19.4 0 12.5 0Z" 
+                fill="${markerColor}" 
+                stroke="white" 
+                stroke-width="1.5"/>
+          <circle cx="12.5" cy="12.5" r="3.5" fill="white"/>
+        </svg>
+      </div>`,
+      iconSize: [25, 41],
+      popupAnchor: [0, -20],
+      iconAnchor: [12.5, 41]
     });
     
     const popupContent = `
       <div class="map-popup" onclick="window.showPoliticianModal('${escapeHtml(politician.name)}', '${escapeHtml(politician.party)}', '${escapeHtml(politician.district)}', '${escapeHtml(politician.province)}')">
         <strong>${escapeHtml(politician.name)}</strong>
-        <div class="popup-party" style="color: ${markerColor}; font-weight: bold;">${escapeHtml(politician.party)}</div>
+        <div class="popup-party" style="color: ${markerColor}; font-weight: bold;">
+          ${escapeHtml(politician.party)}
+        </div>
         <div class="popup-district">${escapeHtml(politician.district)}</div>
       </div>
     `;
     
-    const marker = L.marker([coords.lat, coords.lng], { icon: coloredIcon }).bindPopup(popupContent);
+    const marker = L.marker([coords.lat, coords.lng], { icon: coloredPinIcon })
+      .bindPopup(popupContent);
+    
     markers.push(marker);
     bounds.push([coords.lat, coords.lng]);
   });
   
   markersLayer.addLayers(markers);
-  if (bounds.length > 0 && map) map.fitBounds(bounds, { padding: [40, 40] });
+  if (bounds.length > 0 && map) {
+    map.fitBounds(bounds, { padding: [40, 40] });
+  }
   
   console.log(`Map updated: ${markers.length} markers added`);
 }
@@ -424,15 +459,45 @@ if (provinceFilter) {
     if (searchInput) searchInput.value = "";
     currentOffset = 0;
     closeDropdown();
+    
+    const statusMsg = document.getElementById('status');
+    if (statusMsg) statusMsg.innerHTML = '<div class="loading-spinner"><i class="fas fa-spinner fa-spin"></i> Loading...</div>';
+    
     await fetchPoliticians("", currentProvince, 0);
+    
+    // Force map to update bounds after markers are added
+    setTimeout(() => {
+      if (map && markersLayer) {
+        const bounds = [];
+        markersLayer.eachLayer(layer => {
+          if (layer.getLatLng) bounds.push(layer.getLatLng());
+        });
+        if (bounds.length > 0) map.fitBounds(bounds, { padding: [40, 40] });
+      }
+    }, 100);
   });
 }
 
 // ─── Autocomplete ─────────────────────────────────────────────────────────────
 function fetchSuggestions(query) {
-  if (!query || query.length < 2) { closeDropdown(); return; }
+  if (!query || query.length < 2) {
+    closeDropdown();
+    return;
+  }
+  
   const q = query.toLowerCase();
-  const filtered = allReps.filter(p => p.name.toLowerCase().includes(q) || p.district.toLowerCase().includes(q)).slice(0, 8);
+  
+  // Make sure allReps is loaded
+  if (!allReps || allReps.length === 0) {
+    console.log('Waiting for data to load...');
+    return;
+  }
+  
+  const filtered = allReps
+    .filter(p => p.name.toLowerCase().includes(q) || p.district.toLowerCase().includes(q))
+    .slice(0, 8);
+  
+  console.log(`Found ${filtered.length} suggestions for "${query}"`);
   showDropdown(filtered, query);
 }
 
