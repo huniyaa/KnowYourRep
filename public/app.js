@@ -109,6 +109,10 @@ function initScrollAnimation() {
   
   // Initial check
   updateStickyHeader();
+
+  setTimeout(() => {
+  updateStickyHeader();
+}, 100);
 }
 
 async function init() {
